@@ -35,3 +35,9 @@
 ## UI
 - **Bangla/English toggle**, defaulting to Bangla, with the choice remembered. Error text is chosen from the error `code` on the frontend.
 - **Seat counts and hold status refresh every 3 seconds.**
+- **Bangla digits** are shown in Bangla mode. The student-ID box accepts Bangla or English digits and sends English digits.
+- **The student ID is asked for only when needed** (on Apply or on "My applications"), so anyone can browse classes, and the admin page needs no ID. The ID is remembered in the browser.
+- **Only one application at a time:** while a student has an active application, Apply buttons are disabled with a link to it, matching the one-active-hold rule.
+- **Paying and cancelling ask for confirmation first**, because a confirmed admission can't be undone.
+- **The admin page is not protected**, because the spec has no login. In a real system it would be behind authentication.
+- **`GET /holds/{id}` also returns `className`** (an extra field) so the application page can show the class name.

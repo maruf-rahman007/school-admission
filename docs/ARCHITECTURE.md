@@ -39,6 +39,8 @@ flowchart TB
 | `DELETE /holds/{holdId}` | `CancelHoldHandler` (command, raw SQL) |
 | `GET /me/holds` | `GetMyHoldsHandler` (query) |
 
+**Extra response fields** (allowed by the contract): `GET /holds/{holdId}` also returns `className` so the application page needs only one request, and object responses carry `serverTime` (§8.3).
+
 Each handler runs its FluentValidation validator first. A failed validation throws, and the global error middleware turns it into `400 VALIDATION_FAILED`.
 
 ## 3. Data model
@@ -233,7 +235,7 @@ Domain and application code throws typed exceptions (e.g. `NoSeatsAvailableExcep
 ## 8. Frontend
 
 ### 8.1 Structure
-Modular layout (STANDARDS §1b): `app/` (providers, router, error boundary), `modules/{classes,holds,student}`, `shared/{api,i18n,ui,lib}`. The screens are designed in T-004.
+Modular layout (STANDARDS §1b): `app/` (providers, router, error boundary), `modules/{classes,holds,student}`, `shared/{api,i18n,ui,lib}`. Screens, states, text and flows are specified in [UI_DESIGN.md](UI_DESIGN.md). Routes: `/` class list, `/admin` create class, `/holds/:holdId` application, `/me` my applications.
 
 ### 8.2 State and polling
 - All server state goes through TanStack Query. Class lists, the current hold and "my applications" use `refetchInterval: 3000`.
