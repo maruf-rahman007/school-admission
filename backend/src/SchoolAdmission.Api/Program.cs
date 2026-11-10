@@ -4,6 +4,17 @@ using Microsoft.AspNetCore.Cors.Infrastructure;
 using SchoolAdmission.Api.Configuration;
 using SchoolAdmission.Api.Middleware;
 
+// An invalid configuration ends the process with its message and exit code 1 instead of a crash.
+// In-process test hosts catch the exception themselves, so there this handler never runs.
+AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+{
+    if (e.ExceptionObject is InvalidConfigurationException invalid)
+    {
+        Console.Error.WriteLine(invalid.Message);
+        Environment.Exit(1);
+    }
+};
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Settings are read from the final configuration (env vars over appsettings.json defaults).

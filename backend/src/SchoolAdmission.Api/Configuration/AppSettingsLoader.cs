@@ -70,7 +70,7 @@ public static class AppSettingsLoader
             }
             else
             {
-                errors.Add($"{CorsOriginsVariable} entry '{entry}' must be an http(s) URL without a path or query, " +
+                errors.Add($"{CorsOriginsVariable} entry '{entry}' must be an http(s) URL without a path, query, user info or fragment, " +
                     "e.g. http://localhost:3000.");
             }
         }
