@@ -25,9 +25,9 @@ backend/
   src/
     SchoolAdmission.Domain/          entities (SchoolClass, Hold), HoldStatus, domain rules, domain exceptions
     SchoolAdmission.Application/     Commands/ + Queries/ (one folder per use case: command/query, handler, validator, DTOs),
-                                     abstractions (repository interfaces, IClock)
+                                     abstractions (repository interfaces)
     SchoolAdmission.Infrastructure/  EF Core DbContext, configurations, migrations, repositories (raw SQL for holds),
-                                     expiry background service, SystemClock
+                                     expiry background service
     SchoolAdmission.Api/             Controllers, error-handling middleware, DI composition, config
   tests/
     SchoolAdmission.Tests/           xUnit: domain unit tests + integration/concurrency tests vs Postgres
@@ -71,6 +71,7 @@ frontend/src/
 - Naming: `PascalCase` for types and members, `_camelCase` for private fields, and file name = type name.
 - Business-rule failures throw typed exceptions (e.g. `NoSeatsAvailableException`). A single global handler turns them into the error body (§5).
 - All timestamps are `DateTimeOffset` in UTC and serialize as ISO-8601 with `Z`.
+- **Expiry decisions use the database clock (`now()`) only.** Never compare `expires_at` with `DateTime.UtcNow` in C#. There is no `IClock` abstraction (ADR-0002).
 - Configuration comes only from environment variables (and `appsettings` defaults). Never hard-code connection strings.
 
 ## 3. TypeScript / React conventions
@@ -78,14 +79,15 @@ frontend/src/
 - Function components and hooks only. Name component files in `PascalCase.tsx` and hooks `useXxx.ts`.
 - **All HTTP goes through one axios client** that sets the base URL from runtime config, adds `X-Student-Id`, and maps errors to a typed `ApiError`.
 - **All server state goes through TanStack Query.** Polling uses `refetchInterval: 3000`. Do not use `useEffect` + `fetch`.
-- API types in `src/api/types.ts` mirror the contract exactly.
+- API types in each module's `types.ts` mirror the contract exactly.
 - **No hard-coded user-facing text.** Every string comes from the bn/en dictionaries. Error text is looked up by the error `code`.
 - Style with Tailwind utility classes and shadcn/ui components. Avoid custom CSS files.
 - Never show a blank page. Wrap the app in an error boundary and give every query a loading state and an error state.
 
 ## 4. API rules
 - **The contract is frozen.** You may add fields to responses. Never remove or rename a field, and never change a status code.
-- All requests and responses are JSON. Every response may also carry `serverTime`.
+- All requests and responses are JSON. Every response carries an `X-Server-Time` header, and object (non-array) responses also carry a `serverTime` field. Never wrap an array response in an object.
+- IDs are prefixed UUIDs (`c_…`, `h_…`). An unparseable ID returns 404.
 - The student is identified by the `X-Student-Id` header, which must match `^[0-9]{17}$`. Otherwise respond 400.
 
 ### Status codes

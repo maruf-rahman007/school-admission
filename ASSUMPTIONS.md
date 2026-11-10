@@ -18,7 +18,19 @@
 ## API behaviour
 - **Error body:** `{ userResponse: { code, message, resourceId, errors[] }, devResponse: { exceptionType, message, traceId, stackTrace } }`. `devResponse` is always included. This makes problems easy to diagnose during evaluation; a real deployment would turn it off.
 - **Ordering:** classes are sorted by name, and a student's holds are listed newest first.
-- **`serverTime`** is added to responses (extra fields are allowed) so the countdown stays correct even when the user's clock is wrong.
+- **Server time** is sent so the countdown stays correct even when the user's clock is wrong: an `X-Server-Time` header on every response, and a `serverTime` field on object responses. Array responses (`GET /classes`, `GET /me/holds`) keep their exact shape and rely on the header.
+- **IDs** look like `c_<uuid>` (class) and `h_<uuid>` (hold). An ID that cannot be parsed returns 404, the same as an unknown ID.
+
+## Concurrency, expiry and scaling
+- **Seats are protected by a Postgres row lock** on the class while a hold is created, so held + confirmed can never exceed total seats. Redis was considered and rejected: it would be a second source of truth and extra infrastructure, and it isn't needed at this scale.
+- **"One active hold per student"** is guaranteed by a partial unique index in the database, so even parallel requests from the same student cannot create two.
+- **Expiry is decided at query time** using the database clock, so an expired hold stops counting immediately. A background job also marks expired holds as `EXPIRED` every 5 seconds.
+- **Two or more backend processes are safe** because every rule is enforced inside PostgreSQL (row lock, unique index, database clock). Nothing is kept in backend memory. To try it, run a second backend container against the same `db` service (steps in README).
+
+## Configuration
+- **The frontend's backend URL** is the `VITE_API_BASE_URL` environment variable, passed to the frontend image as a build argument because Vite bakes it in at build time. After changing it, run `docker compose up --build`.
+- **The database connection** is the `ConnectionStrings__Default` environment variable.
+- **Backend tests** use a separate `admission_test` database, so running them never changes real data.
 
 ## UI
 - **Bangla/English toggle**, defaulting to Bangla, with the choice remembered. Error text is chosen from the error `code` on the frontend.
