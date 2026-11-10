@@ -1,0 +1,53 @@
+# School Admission System.
+# Tests: docker compose run --rm backend-tests   (starts db, waits until healthy, runs every backend test)
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-admission}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admission}
+      POSTGRES_DB: ${POSTGRES_DB:-admission}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Probe over TCP: during first-time init Postgres only listens on its unix socket,
+    # so a TCP probe stays unhealthy until the real server is up.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+    # Not published to the host (ARCHITECTURE §11).
+
+  backend-tests:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
+    profiles: ["test"]
+    depends_on:
+      db:
+        condition: service_healthy
+    working_dir: /src
+    environment:
+      # Tests use their own database; the fixture recreates it and refuses any other name.
+      TEST_DB_CONNECTION: Host=db;Port=5432;Database=admission_test;Username=${POSTGRES_USER:-admission};Password=${POSTGRES_PASSWORD:-admission}
+      DOTNET_NOLOGO: "true"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+    volumes:
+      - ./backend:/src
+      - nuget-cache:/root/.nuget/packages
+      # Anonymous volumes keep container build output away from the host's bin/ and obj/.
+      - /src/src/SchoolAdmission.Domain/bin
+      - /src/src/SchoolAdmission.Domain/obj
+      - /src/src/SchoolAdmission.Application/bin
+      - /src/src/SchoolAdmission.Application/obj
+      - /src/src/SchoolAdmission.Infrastructure/bin
+      - /src/src/SchoolAdmission.Infrastructure/obj
+      - /src/src/SchoolAdmission.Api/bin
+      - /src/src/SchoolAdmission.Api/obj
+      - /src/tests/SchoolAdmission.Tests/bin
+      - /src/tests/SchoolAdmission.Tests/obj
+    command: ["dotnet", "test"]
+
+volumes:
+  pgdata:
+  nuget-cache:
