@@ -1,0 +1,35 @@
+# --- Local agent workflow (never commit) ---
+CLAUDE.md
+.claude/
+tickets/
+
+# --- Confidential assignment spec ---
+*.pdf
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- .NET ---
+bin/
+obj/
+*.user
+*.suo
+TestResults/
+*.trx
+coverage/
+
+# --- Node / Vite ---
+node_modules/
+dist/
+*.local
+npm-debug.log*
+.vite/
+
+# --- IDE / OS ---
+.vs/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
