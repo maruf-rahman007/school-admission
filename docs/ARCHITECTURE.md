@@ -268,6 +268,8 @@ All configuration comes from environment variables, with `appsettings.json` defa
 | `EXPIRY_SWEEP_INTERVAL_SECONDS` | backend | `5` |
 | `CORS_ALLOWED_ORIGINS` | backend | `http://localhost:3000` (comma-separated list) |
 | `VITE_API_BASE_URL` | frontend **build arg** | `http://localhost:8080` |
+| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | `db` | `admission` / `admission` / `admission` (`ConnectionStrings__Default` must use the same user and password) |
+| `TEST_DB_CONNECTION` | `backend-tests` | `Host=db;Port=5432;Database=admission_test;Username=admission;Password=admission` (built from `POSTGRES_*` in compose; the test fixture refuses any database other than `admission_test`) |
 
 **Changing the backend URL** ([ADR-0003](adr/0003-frontend-backend-url.md)): Vite bakes `VITE_API_BASE_URL` into the JavaScript at build time. Compose passes it from an environment variable as a build arg, so after changing it you must run `docker compose up --build`. The README says this.
 
@@ -278,7 +280,7 @@ All configuration comes from environment variables, with `appsettings.json` defa
 | `db` | `postgres:17-alpine` | not published | named volume `pgdata` (survives `down`/`up`), `pg_isready` healthcheck |
 | `backend` | .NET 10 multi-stage (sdk → aspnet) | `8080:8080` | starts after `db` is healthy, **applies EF migrations on startup**, healthcheck on `/health` |
 | `frontend` | node build → `nginx:alpine` | `3000:80` | build arg `VITE_API_BASE_URL`, SPA fallback to `index.html` |
-| `backend-tests` | .NET 10 SDK | — | profile `test`; run with `docker compose run --rm backend-tests`. Uses a **separate database `admission_test`** on the same `db` server, so tests never touch real data |
+| `backend-tests` | `mcr.microsoft.com/dotnet/sdk:10.0` | — | profile `test`; run with `docker compose run --rm backend-tests`. Bind-mounts `./backend` (always tests the current code), caches NuGet packages in a named volume, and keeps `bin/`/`obj/` in anonymous volumes. Uses a **separate database `admission_test`** on the same `db` server via `TEST_DB_CONNECTION`; a test fixture drops and recreates it once per run, so tests never touch real data |
 
 `docker compose up` starts `db`, `backend` and `frontend`. Data persists across restarts and `docker compose down` / `up`. Only `docker compose down -v` deletes it.
 
