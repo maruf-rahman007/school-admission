@@ -21,6 +21,9 @@ builder.Services.AddOptions<CorsOptions>().Configure<AppSettings>((options, sett
 
 builder.Services.AddControllers();
 
+// OpenAPI document (built-in generator) + Swagger UI, on in every environment so the API can be explored.
+builder.Services.AddOpenApi();
+
 // Liveness only: no dependency checks (e.g. no database), so /health is 200 while the process runs.
 builder.Services.AddHealthChecks();
 
@@ -32,9 +35,15 @@ app.Services.GetRequiredService<AppSettings>();
 // Order matters: the server-time header is registered first so every response gets it, preflight included.
 app.UseMiddleware<ServerTimeMiddleware>();
 app.UseCors();
+app.UseSwaggerUI(options =>
+{
+    options.RoutePrefix = "swagger";
+    options.SwaggerEndpoint("/openapi/v1.json", "School Admission API v1");
+});
 app.UseRouting();
 
 app.MapControllers();
+app.MapOpenApi();
 
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
@@ -44,6 +53,6 @@ app.MapHealthChecks("/health", new HealthCheckOptions
         return context.Response.WriteAsync(
             JsonSerializer.Serialize(new { status = report.Status.ToString() }));
     },
-});
+}).ExcludeFromDescription();
 
 app.Run();
