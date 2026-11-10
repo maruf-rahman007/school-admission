@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <ProjectReference Include="..\SchoolAdmission.Application\SchoolAdmission.Application.csproj" />
+        <ProjectReference Include="..\SchoolAdmission.Domain\SchoolAdmission.Domain.csproj" />
+    </ItemGroup>
+
+</Project>

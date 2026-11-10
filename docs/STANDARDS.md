@@ -21,7 +21,7 @@ These are the rules every change must follow. Reviews check against this file, a
 ## 1a. Backend structure (Clean Architecture + CQRS)
 ```
 backend/
-  SchoolAdmission.sln
+  SchoolAdmission.slnx
   src/
     SchoolAdmission.Domain/          entities (SchoolClass, Hold), HoldStatus, domain rules, domain exceptions
     SchoolAdmission.Application/     Commands/ + Queries/ (one folder per use case: command/query, handler, validator, DTOs),

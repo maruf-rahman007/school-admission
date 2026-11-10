@@ -18,7 +18,7 @@
 ## API behaviour
 - **Error body:** `{ userResponse: { code, message, resourceId, errors[] }, devResponse: { exceptionType, message, traceId, stackTrace } }`. `devResponse` is always included. This makes problems easy to diagnose during evaluation; a real deployment would turn it off.
 - **Ordering:** classes are sorted by name, and a student's holds are listed newest first.
-- **Server time** is sent so the countdown stays correct even when the user's clock is wrong: an `X-Server-Time` header on every response, and a `serverTime` field on object responses. Array responses (`GET /classes`, `GET /me/holds`) keep their exact shape and rely on the header.
+- **Server time** is sent so the countdown stays correct even when the user's clock is wrong: an `X-Server-Time` header on every response, and a `serverTime` field on object responses. Array responses (`GET /classes`, `GET /me/holds`) keep their exact shape and rely on the header. The server time comes from the backend's clock, which in Docker is the same host clock PostgreSQL uses; expiry itself is always decided by the database clock.
 - **IDs** look like `c_<uuid>` (class) and `h_<uuid>` (hold). An ID that cannot be parsed returns 404, the same as an unknown ID.
 
 ## Concurrency, expiry and scaling
@@ -31,6 +31,8 @@
 - **The frontend's backend URL** is the `VITE_API_BASE_URL` environment variable, passed to the frontend image as a build argument because Vite bakes it in at build time. After changing it, run `docker compose up --build`.
 - **The database connection** is the `ConnectionStrings__Default` environment variable.
 - **Backend tests** use a separate `admission_test` database, so running them never changes real data.
+- **Invalid configuration stops the backend at startup.** If a setting is invalid (`HOLD_DURATION_SECONDS` or `EXPIRY_SWEEP_INTERVAL_SECONDS` not a positive whole number, `CORS_ALLOWED_ORIGINS` without a valid http(s) URL, or an empty connection string), the backend refuses to start and logs why, so a typo can't silently change behaviour. An empty variable counts as invalid; extra spaces and a trailing `/` in the CORS list are tolerated.
+- **Swagger UI is always on** (`/swagger`), including in Docker, so the API can be explored from a browser during evaluation. A real deployment would restrict it.
 
 ## UI
 - **Bangla/English toggle**, defaulting to Bangla, with the choice remembered. Error text is chosen from the error `code` on the frontend.

@@ -2,6 +2,7 @@
 CLAUDE.md
 .claude/
 tickets/
+tasks/
 
 # --- Confidential assignment spec ---
 *.pdf
