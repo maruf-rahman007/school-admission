@@ -1,10 +1,11 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
+using SchoolAdmission.Tests.Infrastructure;
 
 namespace SchoolAdmission.Tests;
 
-public class HealthEndpointTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public class HealthEndpointTests(TestAppFactory factory)
+    : IClassFixture<TestAppFactory>
 {
     [Fact]
     public async Task GetHealth_WhenAppIsRunning_Returns200WithHealthyStatus()

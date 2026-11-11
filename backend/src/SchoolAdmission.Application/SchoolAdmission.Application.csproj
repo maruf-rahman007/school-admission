@@ -4,4 +4,8 @@
         <ProjectReference Include="..\SchoolAdmission.Domain\SchoolAdmission.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="FluentValidation" Version="12.2.0" />
+    </ItemGroup>
+
 </Project>

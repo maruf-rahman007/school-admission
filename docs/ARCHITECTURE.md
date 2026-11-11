@@ -228,9 +228,12 @@ The error body shape is in STANDARDS §5. These are the codes (`userResponse.cod
 | `HOLD_ALREADY_CONFIRMED` | 409 | Cancel a confirmed hold |
 | `HOLD_CANCELLED` | 409 | Confirm a cancelled hold |
 | `HOLD_EXPIRED` | 410 | Confirm an expired hold |
+| `ROUTE_NOT_FOUND` | 404 | No endpoint matches the URL |
+| `METHOD_NOT_ALLOWED` | 405 | The URL exists but not for this HTTP method |
+| `UNSUPPORTED_MEDIA_TYPE` | 415 | A body was sent with a Content-Type other than `application/json` (or none) |
 | `INTERNAL_ERROR` | 500 | Unexpected fault (never caused by client input) |
 
-Domain and application code throws typed exceptions (e.g. `NoSeatsAvailableException`). One middleware maps each exception type to its code and HTTP status. ASP.NET's default ProblemDetails responses are turned off, so model-binding errors use the same body. The frontend shows text from its bn/en dictionary, looked up by `code`.
+Domain and application code throws typed exceptions (e.g. `NoSeatsAvailableException`). One middleware maps each exception type to its code and HTTP status. ASP.NET's default ProblemDetails responses are turned off, so model-binding errors use the same body, and a status-code fallback wraps every empty 4xx/5xx (unknown route, wrong method, wrong content type) in it too. The frontend shows text from its bn/en dictionary, looked up by `code`.
 
 ## 8. Frontend
 
@@ -278,7 +281,7 @@ All configuration comes from environment variables, with `appsettings.json` defa
 | Service | Image | Port | Notes |
 |---|---|---|---|
 | `db` | `postgres:17-alpine` | not published | named volume `pgdata` (survives `down`/`up`), `pg_isready` healthcheck |
-| `backend` | .NET 10 multi-stage (sdk → aspnet) | `8080:8080` | starts after `db` is healthy, **applies EF migrations on startup**, healthcheck on `/health` |
+| `backend` | .NET 10 multi-stage (sdk → aspnet) | `8080:8080` | starts after `db` is healthy, **applies EF migrations on startup** (a hosted service, before the server listens; a failure logs the error and exits with code 1), `restart: on-failure` so compose retries, healthcheck `wget` on `/health` |
 | `frontend` | node build → `nginx:alpine` | `3000:80` | build arg `VITE_API_BASE_URL`, SPA fallback to `index.html` |
 | `backend-tests` | `mcr.microsoft.com/dotnet/sdk:10.0` | — | profile `test`; run with `docker compose run --rm backend-tests`. Bind-mounts `./backend` (always tests the current code), caches NuGet packages in a named volume, and keeps `bin/`/`obj/` in anonymous volumes. Uses a **separate database `admission_test`** on the same `db` server via `TEST_DB_CONNECTION`; a test fixture drops and recreates it once per run, so tests never touch real data |
 

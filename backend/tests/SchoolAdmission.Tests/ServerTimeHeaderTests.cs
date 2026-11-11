@@ -5,11 +5,12 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using SchoolAdmission.Api.Middleware;
+using SchoolAdmission.Tests.Infrastructure;
 
 namespace SchoolAdmission.Tests;
 
-public class ServerTimeHeaderTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public class ServerTimeHeaderTests(TestAppFactory factory)
+    : IClassFixture<TestAppFactory>
 {
     private const string Format = "yyyy-MM-dd'T'HH:mm:ss.fff'Z'";
 

@@ -5,4 +5,16 @@
         <ProjectReference Include="..\SchoolAdmission.Domain\SchoolAdmission.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.15" />
+        <!-- Pinned so the whole solution uses one EF Core patch (the Npgsql provider alone would pull an older one). -->
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.15" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+        <!-- Design-time only (dotnet ef); never flows to the Api. -->
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.15">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
 </Project>
