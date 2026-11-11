@@ -49,7 +49,9 @@ export const bn = {
 
   'holds.heading': 'আবেদন',
   'holds.statusLabel': 'অবস্থা:',
-  'holds.expiresAt': 'মেয়াদ শেষ হবে:',
+  'holds.timeLeft': 'বাকি সময়:',
+  'holds.expiredMessage': 'সময় শেষ হয়ে গেছে।',
+  'holds.applyAgain': 'আবার আবেদন করুন',
   'holds.status.HELD': 'অপেক্ষমাণ',
   'holds.status.CONFIRMED': 'ভর্তি নিশ্চিত',
   'holds.status.EXPIRED': 'মেয়াদ শেষ',

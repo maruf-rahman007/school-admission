@@ -24,7 +24,7 @@
 ## Concurrency, expiry and scaling
 - **Seats are protected by a Postgres row lock** on the class while a hold is created, so held + confirmed can never exceed total seats. Redis was considered and rejected: it would be a second source of truth and extra infrastructure, and it isn't needed at this scale.
 - **"One active hold per student"** is guaranteed by a partial unique index in the database, so even parallel requests from the same student cannot create two.
-- **Expiry is decided at query time** using the database clock, so an expired hold stops counting immediately. A background job also marks expired holds as `EXPIRED` every 5 seconds.
+- **Expiry is decided at query time** using the database clock, so an expired hold stops counting immediately. A background job also marks expired holds as `EXPIRED` every 5 seconds. If that job hits a database error, it logs a warning and tries again on the next run instead of stopping the backend, because expiry is already correct without it.
 - **Two or more backend processes are safe** because every rule is enforced inside PostgreSQL (row lock, unique index, database clock). Nothing is kept in backend memory. To try it, run a second backend container against the same `db` service (steps in README).
 
 ## Configuration

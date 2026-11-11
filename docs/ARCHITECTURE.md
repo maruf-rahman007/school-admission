@@ -198,6 +198,7 @@ sequenceDiagram
    UPDATE holds SET status = 'EXPIRED' WHERE status = 'HELD' AND expires_at <= now();
    ```
    The statement is idempotent, so several backend instances can run it at the same time.
+   The first sweep runs one interval after startup. If a sweep hits a database error, it logs a warning and tries again on the next tick; the backend keeps running (query-time expiry stays correct meanwhile).
 
 ```mermaid
 sequenceDiagram
