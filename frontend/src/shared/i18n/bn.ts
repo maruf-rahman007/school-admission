@@ -21,7 +21,6 @@ export const bn = {
   'common.close': 'বন্ধ করুন',
   'common.save': 'সংরক্ষণ করুন',
 
-  'page.comingSoon': 'এই পাতাটি শীঘ্রই আসছে।',
   'notFound.title': 'পাতাটি পাওয়া যায়নি।',
   'notFound.back': 'ক্লাস তালিকায় ফিরে যান',
   'crash.title': 'কিছু একটা ভুল হয়েছে।',
@@ -71,6 +70,14 @@ export const bn = {
   'holds.cancelledToast': 'আবেদন বাতিল হয়েছে।',
   'holds.confirmedMessage': '✓ ভর্তি নিশ্চিত হয়েছে।',
   'holds.cancelledMessage': 'আবেদন বাতিল করা হয়েছে।',
+
+  'me.heading': 'আমার আবেদন',
+  'me.view': 'দেখুন',
+  'me.empty': 'আপনার কোনো আবেদন নেই।',
+  'me.emptyLink': 'ক্লাস দেখুন',
+  'me.noId': 'আবেদন দেখতে শিক্ষার্থী আইডি দিন।',
+  'classes.activeBanner': 'আপনার একটি সক্রিয় আবেদন আছে।',
+  'classes.activeBannerLink': 'দেখুন',
 
   'error.NO_SEATS_AVAILABLE': 'দুঃখিত, এই ক্লাসে আর কোনো আসন খালি নেই।',
   'error.STUDENT_HAS_ACTIVE_HOLD': 'আপনার ইতিমধ্যে একটি সক্রিয় আবেদন আছে।',

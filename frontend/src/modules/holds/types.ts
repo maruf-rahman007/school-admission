@@ -11,6 +11,15 @@ export interface Hold {
   serverTime: string
 }
 
+/** One element of `GET /me/holds` (newest first; an expired HELD hold reads EXPIRED). Server time comes in the header. */
+export interface MyHold {
+  holdId: string
+  classId: string
+  className: string
+  status: HoldStatus
+  expiresAt: string
+}
+
 /** 201 body of `POST /classes/{classId}/holds`. */
 export interface HoldCreated {
   holdId: string

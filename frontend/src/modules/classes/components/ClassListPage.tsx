@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
-import { useCreateHold } from '@/modules/holds'
+import { useActiveHold, useCreateHold } from '@/modules/holds'
 import { openStudentIdDialog, useStudentId } from '@/modules/student'
 import { ApiError, useErrorMessage } from '@/shared/api'
 import { useI18n } from '@/shared/i18n'
@@ -64,6 +64,8 @@ export function ClassListPage() {
   const errorMessage = useErrorMessage()
   const { data, error } = useClasses()
   const { apply, applyingClassId } = useApply()
+  // Undefined until /me/holds has answered (or with no ID): Apply stays enabled and the server's 409 is the fallback.
+  const activeHold = useActiveHold()
 
   let content
   if (data === undefined && error) {
@@ -96,7 +98,7 @@ export function ClassListPage() {
             schoolClass={schoolClass}
             onApply={apply}
             applying={applyingClassId === schoolClass.id}
-            applyLocked={applyingClassId !== null}
+            applyLocked={applyingClassId !== null || activeHold !== undefined}
           />
         ))}
       </div>
@@ -106,6 +108,18 @@ export function ClassListPage() {
   return (
     <section className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold">{t('classes.heading')}</h1>
+      {activeHold && (
+        // One active application per student (UI_DESIGN §4): every Apply is disabled while this shows.
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
+          <span>{t('classes.activeBanner')}</span>
+          <Link
+            to={`/holds/${activeHold.holdId}`}
+            className="rounded-sm font-medium text-primary underline underline-offset-4 outline-none hover:no-underline focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {t('classes.activeBannerLink')}
+          </Link>
+        </p>
+      )}
       {content}
     </section>
   )

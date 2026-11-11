@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, type QueryKey } from '@tanstack/react-query'
 import { serverNow } from '@/shared/api'
 import { remainingSeconds } from '@/shared/lib/countdown'
 import { holdQueryKey } from './useHold'
@@ -19,8 +19,12 @@ export interface HoldCountdown {
  * At 0, `expired` becomes true and stays true for this hold even if a later poll still says HELD (DECISIONS T-140);
  * the hold is fetched once right away to confirm, and the normal 3 s polling continues. A server CONFIRMED or
  * CANCELLED status wins over `expired`: callers check the server status first. T-150 removes the Pay/Cancel buttons with `expired`.
+ *
+ * `refetchKey` is the query fetched once at 0: the single hold by default (application page); "my applications" passes
+ * its list key. The once-only guard is keyed by hold and expiry, not by `refetchKey`'s identity, so a new array literal
+ * on every render never refetches twice.
  */
-export function useHoldCountdown(holdId: string, expiresAt: string | undefined): HoldCountdown {
+export function useHoldCountdown(holdId: string, expiresAt: string | undefined, refetchKey?: QueryKey): HoldCountdown {
   const queryClient = useQueryClient()
   const key = `${holdId}|${expiresAt ?? ''}`
   const expiresAtMs = expiresAt === undefined ? Number.NaN : Date.parse(expiresAt)
@@ -56,9 +60,10 @@ export function useHoldCountdown(holdId: string, expiresAt: string | undefined):
     if (refetchedKey.current !== key) {
       refetchedKey.current = key
       // Errors are kept in the query state (offline banner); polling keeps retrying.
-      void queryClient.refetchQueries({ queryKey: holdQueryKey(holdId) })
+      void queryClient.refetchQueries({ queryKey: refetchKey ?? holdQueryKey(holdId) })
     }
-  }, [expired, expiredKey, key, holdId, queryClient])
+    // refetchKey may be a new array on every render: harmless, the refetchedKey guard still allows one fetch per hold.
+  }, [expired, expiredKey, key, holdId, queryClient, refetchKey])
 
   return { seconds: expired ? 0 : seconds, expired }
 }

@@ -1,5 +1,5 @@
 import { apiClient } from '@/shared/api'
-import type { Hold, HoldCreated } from '../types'
+import type { Hold, HoldCreated, MyHold } from '../types'
 
 export async function fetchHold(holdId: string, signal?: AbortSignal): Promise<Hold> {
   const response = await apiClient.get<Hold>(`/holds/${encodeURIComponent(holdId)}`, { signal })
@@ -21,4 +21,10 @@ export async function confirmHold(holdId: string): Promise<Hold> {
 /** Cancels the hold; 204 with no body (also for a hold that was already expired or cancelled). */
 export async function cancelHold(holdId: string): Promise<void> {
   await apiClient.delete(`/holds/${encodeURIComponent(holdId)}`)
+}
+
+/** The saved student's applications, newest first; the API client adds `X-Student-Id`. */
+export async function fetchMyHolds(signal?: AbortSignal): Promise<MyHold[]> {
+  const response = await apiClient.get<MyHold[]>('/me/holds', { signal })
+  return response.data
 }

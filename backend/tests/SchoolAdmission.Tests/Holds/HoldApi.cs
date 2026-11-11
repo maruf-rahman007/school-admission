@@ -33,6 +33,10 @@ public static class HoldApi
     public static Task<HttpResponseMessage> CancelAsync(HttpClient client, string holdId, string? studentId) =>
         SendAsync(client, HttpMethod.Delete, $"/holds/{holdId}", studentId);
 
+    /// <summary>GET /me/holds with the given header value (null = no header).</summary>
+    public static Task<HttpResponseMessage> MyHoldsAsync(HttpClient client, string? studentId) =>
+        SendAsync(client, HttpMethod.Get, "/me/holds", studentId);
+
     /// <summary>Starts every request, releases them together through one gate, and waits for all responses.</summary>
     public static async Task<(HttpStatusCode Status, string? Code, string Body)[]> FireTogetherAsync(
         IEnumerable<Func<Task<HttpResponseMessage>>> requests)
@@ -102,6 +106,18 @@ public static class HoldApi
         command.Parameters.AddWithValue("seconds", (double)expiresInSeconds);
         await command.ExecuteNonQueryAsync(Ct);
         return id;
+    }
+
+    /// <summary>Sets a hold's <c>created_at</c> to <c>now() + offsetSeconds</c> on the database clock (orders a student's list).</summary>
+    public static async Task SetCreatedAtAsync(DatabaseFixture database, Guid holdId, int offsetSeconds)
+    {
+        await using var connection = new NpgsqlConnection(database.ConnectionString);
+        await connection.OpenAsync(Ct);
+        await using var command = new NpgsqlCommand(
+            "UPDATE holds SET created_at = now() + make_interval(secs => @seconds) WHERE id = @id", connection);
+        command.Parameters.AddWithValue("id", holdId);
+        command.Parameters.AddWithValue("seconds", (double)offsetSeconds);
+        await command.ExecuteNonQueryAsync(Ct);
     }
 
     /// <summary>Runs a scalar SQL query against admission_test (for asserting what is really stored).</summary>

@@ -5,6 +5,7 @@ import { confirmHold } from '../api/holdsApi'
 import { classesListKey } from './classesListKey'
 import { useActionErrorToast } from './useActionErrorToast'
 import { holdQueryKey } from './useHold'
+import { myHoldsKeyPrefix } from './useMyHolds'
 
 /**
  * POST /holds/{holdId}/confirm. Never retried automatically: one click sends one request.
@@ -30,6 +31,10 @@ export function useConfirmHold(holdId: string) {
       // Not awaited: the dialog closes right after the toast; the view updates when the refetch lands.
       void queryClient.refetchQueries({ queryKey: holdQueryKey(holdId) })
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: classesListKey }),
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: classesListKey }),
+        queryClient.invalidateQueries({ queryKey: myHoldsKeyPrefix }),
+      ]),
   })
 }

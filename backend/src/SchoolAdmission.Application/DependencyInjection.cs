@@ -7,6 +7,7 @@ using SchoolAdmission.Application.Holds.Commands.CancelHold;
 using SchoolAdmission.Application.Holds.Commands.ConfirmHold;
 using SchoolAdmission.Application.Holds.Commands.CreateHold;
 using SchoolAdmission.Application.Holds.Queries.GetHoldById;
+using SchoolAdmission.Application.Holds.Queries.GetMyHolds;
 
 namespace SchoolAdmission.Application;
 
@@ -23,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<GetHoldByIdHandler>();
         services.AddScoped<ConfirmHoldHandler>();
         services.AddScoped<CancelHoldHandler>();
+        services.AddScoped<GetMyHoldsHandler>();
         return services;
     }
 }

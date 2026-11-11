@@ -19,6 +19,12 @@ public interface IHoldRepository
     Task<HoldDto?> FindAsync(Guid id, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Every hold of one student, newest first (<c>created_at DESC, id DESC</c>), each with its class name and effective
+    /// status on the database clock. Read only.
+    /// </summary>
+    Task<IReadOnlyList<HoldDto>> ListByStudentAsync(string studentId, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Confirms a hold in one transaction (ARCHITECTURE §5.2): locks only the hold row, checks owner and status on the
     /// database clock, then writes CONFIRMED, or EXPIRED when a HELD hold has run out.
     /// </summary>
