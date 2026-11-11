@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using SchoolAdmission.Application.Abstractions;
 using SchoolAdmission.Infrastructure.Persistence;
+using SchoolAdmission.Infrastructure.Repositories;
 
 namespace SchoolAdmission.Infrastructure;
 
@@ -15,6 +17,7 @@ public static class DependencyInjection
     {
         services.AddDbContext<AdmissionDbContext>((provider, options) => options.UseNpgsql(connectionString(provider)));
         services.AddHostedService<DatabaseMigrator>();
+        services.AddScoped<IClassRepository, ClassRepository>();
         return services;
     }
 }

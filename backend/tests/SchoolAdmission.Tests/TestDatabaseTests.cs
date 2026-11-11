@@ -14,15 +14,6 @@ public class TestDatabaseTests(DatabaseFixture database)
         Assert.Equal("admission_test", result);
     }
 
-    [Fact]
-    public async Task CurrentDatabase_WhenFixtureInitialized_HasNoUserTables()
-    {
-        var result = await ScalarAsync(
-            "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'");
-
-        Assert.Equal(0L, result);
-    }
-
     private async Task<object?> ScalarAsync(string sql)
     {
         var cancellationToken = TestContext.Current.CancellationToken;

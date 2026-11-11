@@ -26,6 +26,26 @@ export const en: Dictionary = {
   'crash.title': 'Something went wrong.',
   'crash.refresh': 'Refresh',
 
+  'classes.heading': 'Classes',
+  'classes.total': 'Total',
+  'classes.held': 'Pending',
+  'classes.confirmed': 'Confirmed',
+  'classes.available': 'Available:',
+  'classes.apply': 'Apply',
+  'classes.full': 'No seats',
+  'classes.empty': 'No classes yet.',
+  'classes.createLink': 'Create a class',
+
+  'admin.title': 'Create class',
+  'admin.nameLabel': 'Class/shift name',
+  'admin.seatsLabel': 'Total seats',
+  'admin.submit': 'Create',
+  'admin.nameError': 'Enter the class name.',
+  'admin.seatsError': 'Seats must be a whole number of 1 or more.',
+  'admin.created': 'Class created.',
+  'admin.existing': 'Existing classes',
+  'admin.availableShort': 'Available',
+
   'error.NO_SEATS_AVAILABLE': 'Sorry, no seats are left in this class.',
   'error.STUDENT_HAS_ACTIVE_HOLD': 'You already have an active application.',
   'error.HOLD_EXPIRED': 'Time ran out. Please apply again.',
@@ -39,4 +59,5 @@ export const en: Dictionary = {
   'error.MALFORMED_REQUEST': 'The request was invalid.',
   'error.INTERNAL_ERROR': 'Something went wrong on the server. Please try again.',
   'error.NETWORK': "Can't reach the server. Retrying…",
+  'error.NETWORK_SUBMIT': "Can't reach the server. Please try again later.",
 }

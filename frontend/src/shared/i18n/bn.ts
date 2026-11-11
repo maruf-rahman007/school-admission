@@ -27,6 +27,26 @@ export const bn = {
   'crash.title': 'কিছু একটা ভুল হয়েছে।',
   'crash.refresh': 'রিফ্রেশ করুন',
 
+  'classes.heading': 'ক্লাসসমূহ',
+  'classes.total': 'মোট',
+  'classes.held': 'অপেক্ষমাণ',
+  'classes.confirmed': 'নিশ্চিত',
+  'classes.available': 'খালি আসন:',
+  'classes.apply': 'আবেদন করুন',
+  'classes.full': 'আসন নেই',
+  'classes.empty': 'এখনো কোনো ক্লাস নেই।',
+  'classes.createLink': 'ক্লাস তৈরি করুন',
+
+  'admin.title': 'ক্লাস তৈরি করুন',
+  'admin.nameLabel': 'ক্লাস/শিফটের নাম',
+  'admin.seatsLabel': 'মোট আসন',
+  'admin.submit': 'তৈরি করুন',
+  'admin.nameError': 'ক্লাসের নাম দিন।',
+  'admin.seatsError': 'আসন সংখ্যা ১ বা তার বেশি পূর্ণসংখ্যা হতে হবে।',
+  'admin.created': 'ক্লাস তৈরি হয়েছে।',
+  'admin.existing': 'বিদ্যমান ক্লাস',
+  'admin.availableShort': 'খালি',
+
   'error.NO_SEATS_AVAILABLE': 'দুঃখিত, এই ক্লাসে আর কোনো আসন খালি নেই।',
   'error.STUDENT_HAS_ACTIVE_HOLD': 'আপনার ইতিমধ্যে একটি সক্রিয় আবেদন আছে।',
   'error.HOLD_EXPIRED': 'সময় শেষ হয়ে গেছে। আবার আবেদন করুন।',
@@ -40,6 +60,7 @@ export const bn = {
   'error.MALFORMED_REQUEST': 'অনুরোধটি সঠিক নয়।',
   'error.INTERNAL_ERROR': 'সার্ভারে সমস্যা হয়েছে। একটু পরে আবার চেষ্টা করুন।',
   'error.NETWORK': 'সার্ভারের সাথে সংযোগ করা যাচ্ছে না। আবার চেষ্টা হচ্ছে…',
+  'error.NETWORK_SUBMIT': 'সার্ভারের সাথে সংযোগ করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।',
 } satisfies Record<string, string>
 
 export type MessageKey = keyof typeof bn

@@ -74,6 +74,8 @@ CREATE INDEX ix_holds_student_created  ON holds (student_id, created_at DESC);  
 
 The schema is created by EF Core migrations, which the backend applies on startup.
 
+**Class name ordering.** `classes.name` uses the ICU collation `numeric_ci` (`und-u-kn-ks-level2`, non-deterministic), created by the `AddClasses` migration. Digits compare by numeric value and case is ignored, so `GET /classes` (`ORDER BY name, created_at, id`, done in the database) lists `Class 6, Class 7, class 8, Class 10`. Names that differ only in case compare equal and come out oldest first.
+
 ### IDs
 IDs are `uuid` in the database. The API shows them with a type prefix: `c_<32 hex>` for classes and `h_<32 hex>` for holds (e.g. `h_3f2a9c...`). The Api layer adds the prefix when serializing and strips it when parsing. **An ID that cannot be parsed returns 404**, the same as an ID that does not exist.
 

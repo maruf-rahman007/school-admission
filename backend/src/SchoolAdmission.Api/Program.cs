@@ -1,9 +1,11 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using SchoolAdmission.Api.Configuration;
 using SchoolAdmission.Api.Errors;
 using SchoolAdmission.Api.Middleware;
+using SchoolAdmission.Application;
 using SchoolAdmission.Infrastructure;
 using SchoolAdmission.Infrastructure.Persistence;
 
@@ -24,6 +26,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Settings are read from the final configuration (env vars over appsettings.json defaults).
 builder.Services.AddSingleton(sp => AppSettingsLoader.Load(sp.GetRequiredService<IConfiguration>()));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<AppSettings>().Hold);
+builder.Services.AddApplication();
 builder.Services.AddInfrastructure(sp => sp.GetRequiredService<AppSettings>().ConnectionString);
 
 // CORS origins come from the validated settings, resolved lazily so test overrides apply.
@@ -39,6 +42,8 @@ builder.Services.AddOptions<CorsOptions>().Configure<AppSettings>((options, sett
 builder.Services.AddControllers(options =>
         // Missing fields are reported by FluentValidation (VALIDATION_FAILED), not by implicit [Required].
         options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true)
+    // Numbers must be JSON numbers: "40" as a string is a wrong type → MALFORMED_REQUEST (DECISIONS T-120).
+    .AddJsonOptions(options => options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.Strict)
     .ConfigureApiBehaviorOptions(options =>
     {
         options.SuppressMapClientErrors = true;
