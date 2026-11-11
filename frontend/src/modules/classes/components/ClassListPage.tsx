@@ -1,15 +1,69 @@
-import { Link } from 'react-router'
-import { useErrorMessage } from '@/shared/api'
+import { useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Link, useNavigate } from 'react-router'
+import { toast } from 'sonner'
+import { useCreateHold } from '@/modules/holds'
+import { openStudentIdDialog, useStudentId } from '@/modules/student'
+import { ApiError, useErrorMessage } from '@/shared/api'
 import { useI18n } from '@/shared/i18n'
 import { Skeleton } from '@/shared/ui/skeleton'
-import { useClasses } from '../hooks/useClasses'
+import { classesQueryKey, useClasses } from '../hooks/useClasses'
 import { ClassCard } from './ClassCard'
+
+/**
+ * Apply flow (UI_DESIGN §3, §4): asks for the student ID first if none is saved, sends one request at a time,
+ * opens the application on success and explains any failure in a toast. Counts refresh either way.
+ */
+function useApply() {
+  const { t } = useI18n()
+  const errorMessage = useErrorMessage()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const studentId = useStudentId()
+  const createHold = useCreateHold()
+  const [applyingClassId, setApplyingClassId] = useState<string | null>(null)
+  // Set synchronously, so a double click can't start a second request before React re-renders.
+  const inFlight = useRef(false)
+
+  const send = (classId: string) => {
+    if (inFlight.current) {
+      return
+    }
+    inFlight.current = true
+    setApplyingClassId(classId)
+    createHold.mutate(classId, {
+      onSuccess: (hold) => navigate(`/holds/${hold.holdId}`),
+      onError: (error) =>
+        toast.error(error instanceof ApiError && error.isNetworkError ? t('error.NETWORK_SUBMIT') : errorMessage(error)),
+      onSettled: () => {
+        inFlight.current = false
+        setApplyingClassId(null)
+        void queryClient.invalidateQueries({ queryKey: classesQueryKey })
+      },
+    })
+  }
+
+  const apply = (classId: string) => {
+    if (inFlight.current) {
+      return
+    }
+    if (studentId) {
+      send(classId)
+    } else {
+      // Sent automatically once a valid ID is saved; closing the dialog any other way sends nothing.
+      openStudentIdDialog(() => send(classId))
+    }
+  }
+
+  return { apply, applyingClassId }
+}
 
 /** Route `/`: every class with live seat counts. */
 export function ClassListPage() {
   const { t } = useI18n()
   const errorMessage = useErrorMessage()
   const { data, error } = useClasses()
+  const { apply, applyingClassId } = useApply()
 
   let content
   if (data === undefined && error) {
@@ -37,7 +91,13 @@ export function ClassListPage() {
     content = (
       <div className="grid gap-4 sm:grid-cols-2">
         {data.map((schoolClass) => (
-          <ClassCard key={schoolClass.id} schoolClass={schoolClass} />
+          <ClassCard
+            key={schoolClass.id}
+            schoolClass={schoolClass}
+            onApply={apply}
+            applying={applyingClassId === schoolClass.id}
+            applyLocked={applyingClassId !== null}
+          />
         ))}
       </div>
     )

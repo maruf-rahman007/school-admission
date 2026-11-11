@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddDbContext<AdmissionDbContext>((provider, options) => options.UseNpgsql(connectionString(provider)));
         services.AddHostedService<DatabaseMigrator>();
         services.AddScoped<IClassRepository, ClassRepository>();
+        services.AddScoped<IHoldRepository, HoldRepository>();
         return services;
     }
 }

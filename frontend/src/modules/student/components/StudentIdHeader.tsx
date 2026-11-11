@@ -21,12 +21,12 @@ export function StudentIdHeader() {
             </span>
             <span className="hidden font-medium tabular-nums tracking-wide text-foreground sm:inline">{studentId}</span>
           </span>
-          <Button size="sm" variant="link" className="h-auto px-1 py-0" onClick={openStudentIdDialog}>
+          <Button size="sm" variant="link" className="h-auto px-1 py-0" onClick={() => openStudentIdDialog()}>
             {t('student.change')}
           </Button>
         </>
       ) : (
-        <Button size="sm" onClick={openStudentIdDialog}>
+        <Button size="sm" onClick={() => openStudentIdDialog()}>
           {t('student.enter')}
         </Button>
       )}

@@ -15,6 +15,8 @@ public sealed class AdmissionDbContext(DbContextOptions<AdmissionDbContext> opti
 
     public DbSet<SchoolClass> Classes => Set<SchoolClass>();
 
+    public DbSet<Hold> Holds => Set<Hold>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasCollation(

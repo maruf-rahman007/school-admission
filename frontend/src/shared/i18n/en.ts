@@ -46,6 +46,15 @@ export const en: Dictionary = {
   'admin.existing': 'Existing classes',
   'admin.availableShort': 'Available',
 
+  'holds.heading': 'Application',
+  'holds.statusLabel': 'Status:',
+  'holds.expiresAt': 'Expires at:',
+  'holds.status.HELD': 'Pending payment',
+  'holds.status.CONFIRMED': 'Admitted',
+  'holds.status.EXPIRED': 'Expired',
+  'holds.status.CANCELLED': 'Cancelled',
+  'holds.applying': 'Applying…',
+
   'error.NO_SEATS_AVAILABLE': 'Sorry, no seats are left in this class.',
   'error.STUDENT_HAS_ACTIVE_HOLD': 'You already have an active application.',
   'error.HOLD_EXPIRED': 'Time ran out. Please apply again.',
