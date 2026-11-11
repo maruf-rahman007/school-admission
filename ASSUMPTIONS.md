@@ -13,11 +13,11 @@
 
 ## Input
 - **`X-Student-Id`** must be exactly 17 digits; a missing or invalid header returns 400. It is stored as text so leading zeros are kept.
-- **Class creation:** the name must be non-empty after trimming, and `totalSeats` must be a positive integer. Names need not be unique. Classes cannot be edited or deleted, since the spec has no endpoint for it.
+- **Class creation:** the name must be non-empty after trimming, and `totalSeats` must be a positive integer sent as a JSON number (`"40"` as a string is rejected as malformed). Unknown extra fields in the body are ignored. Names need not be unique. Classes cannot be edited or deleted, since the spec has no endpoint for it.
 
 ## API behaviour
 - **Error body:** `{ userResponse: { code, message, resourceId, errors[] }, devResponse: { exceptionType, message, traceId, stackTrace } }`. `devResponse` is always included. This makes problems easy to diagnose during evaluation; a real deployment would turn it off.
-- **Ordering:** classes are sorted by name, and a student's holds are listed newest first.
+- **Ordering:** classes are sorted by name, number-aware and ignoring case ("Class 6" before "Class 10"), so admins see classes in the order they expect; classes with the same name are listed oldest first. A student's holds are listed newest first.
 - **Server time** is sent so the countdown stays correct even when the user's clock is wrong: an `X-Server-Time` header on every response, and a `serverTime` field on object responses. Array responses (`GET /classes`, `GET /me/holds`) keep their exact shape and rely on the header. The server time comes from the backend's clock, which in Docker is the same host clock PostgreSQL uses; expiry itself is always decided by the database clock.
 - **IDs** look like `c_<uuid>` (class) and `h_<uuid>` (hold). An ID that cannot be parsed returns 404, the same as an unknown ID.
 
