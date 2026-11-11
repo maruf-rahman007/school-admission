@@ -1,6 +1,6 @@
 using SchoolAdmission.Api.Ids;
 using SchoolAdmission.Api.Middleware;
-using SchoolAdmission.Application.Classes.Commands.CreateClass;
+using SchoolAdmission.Application.Classes;
 
 namespace SchoolAdmission.Api.Contracts;
 

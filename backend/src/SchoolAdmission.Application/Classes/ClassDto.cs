@@ -1,6 +1,6 @@
 using SchoolAdmission.Domain;
 
-namespace SchoolAdmission.Application.Classes.Commands.CreateClass;
+namespace SchoolAdmission.Application.Classes;
 
 /// <summary>A class with its seat counts (ARCHITECTURE §4).</summary>
 public sealed record ClassDto(Guid Id, string Name, int TotalSeats, int HeldSeats, int ConfirmedSeats, int AvailableSeats)
