@@ -48,7 +48,9 @@ export const en: Dictionary = {
 
   'holds.heading': 'Application',
   'holds.statusLabel': 'Status:',
-  'holds.expiresAt': 'Expires at:',
+  'holds.timeLeft': 'Time left:',
+  'holds.expiredMessage': 'Time ran out.',
+  'holds.applyAgain': 'Apply again',
   'holds.status.HELD': 'Pending payment',
   'holds.status.CONFIRMED': 'Admitted',
   'holds.status.EXPIRED': 'Expired',

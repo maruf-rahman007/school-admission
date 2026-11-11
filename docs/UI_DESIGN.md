@@ -8,7 +8,7 @@ This is the blueprint for the React frontend. It covers every screen, every stat
 - **Bilingual.** Every string comes from the `bn` / `en` dictionaries. Bangla is the default, and the choice is remembered in `localStorage`.
 - **Bangla digits.** In `bn` mode, all numbers (seat counts, countdowns) are shown in Bangla digits (`০৯:৪২`). The student-ID input accepts both Bangla and English digits and converts them to English digits before sending.
 - **Live data.** Class counts, the open application and "my applications" refresh every **3 s** (TanStack Query `refetchInterval: 3000`).
-- **Countdowns** tick every second locally and are corrected by the server-time offset (ARCHITECTURE §8.3). Format: `mm:ss`. The countdown turns red when under 1 minute.
+- **Countdowns** tick every second locally and are corrected by the server-time offset (ARCHITECTURE §8.3). Format: `mm:ss`, or `h:mm:ss` from 1 hour; seconds are rounded up, so `00:00` is never shown while the hold is still active. The countdown turns red when under 1 minute (from `00:59`).
 - **Never a blank page.** Every query has a loading state and an error state. An error boundary catches rendering crashes (§9).
 - **Server unreachable.** A yellow banner appears under the header (§8, "Network down"). The last loaded data stays on screen, and polling keeps retrying.
 
@@ -105,7 +105,7 @@ Class 2 – Day         মোট ৩০ · খালি ৩০
 ```
 The class name comes from the extra `className` field on `GET /holds/{id}` (ARCHITECTURE §2).
 
-**Built in steps.** T-130 ships a minimal version: the heading, `অবস্থা:` with the status badge, and, only while HELD, the expiry as a 24-hour clock time in local time ("মেয়াদ শেষ হবে: ১৪:৩২" / "Expires at: 14:32"). CONFIRMED, EXPIRED and CANCELLED show the badge only. The page polls every 3 s, so a hold that runs out switches to the EXPIRED badge without a reload. T-140 replaces the clock time with the countdown and adds the EXPIRED message; T-150 adds the buttons, dialogs and the remaining messages and links.
+**Built in steps.** T-130 ships a minimal version: the heading, `অবস্থা:` with the status badge, and, only while HELD, the expiry as a 24-hour clock time in local time ("মেয়াদ শেষ হবে: ১৪:৩২" / "Expires at: 14:32"). CONFIRMED, EXPIRED and CANCELLED show the badge only. The page polls every 3 s, so a hold that runs out switches to the EXPIRED badge without a reload. T-140 replaced the clock time with the live countdown ("বাকি সময়:") and added the EXPIRED view: the badge, the grey message and the "আবার আবেদন করুন" link. Once the countdown reaches 0 the page stays EXPIRED even if a poll a moment later still says HELD, and asks the server once right away. T-150 adds the buttons, dialogs and the remaining messages and links.
 
 | Status | Display |
 |---|---|
@@ -215,7 +215,9 @@ The seat bar on a card is filled to the share of taken seats ((held + confirmed)
 |---|---|---|
 | Application heading | আবেদন — {class name} | Application — {class name} |
 | Status label | অবস্থা: | Status: |
-| Expiry (until T-140's countdown) | মেয়াদ শেষ হবে: ১৪:৩২ | Expires at: 14:32 |
+| Countdown (T-140) | বাকি সময়: ০৯:৪২ | Time left: 09:42 |
+| Expired message (T-140) | সময় শেষ হয়ে গেছে। | Time ran out. |
+| Expired link to `/` (T-140) | আবার আবেদন করুন | Apply again |
 | Application not found | আবেদনটি পাওয়া যায়নি। · ক্লাস তালিকায় ফিরে যান | Application not found. · Back to classes |
 | Apply spinner (screen readers) | আবেদন পাঠানো হচ্ছে… | Applying… |
 | Network down on Apply (toast) | সার্ভারের সাথে সংযোগ করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন। | Can't reach the server. Please try again later. |
