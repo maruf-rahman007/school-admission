@@ -263,7 +263,9 @@ The seat rule holds with two or more backend processes on the same database beca
 - expiry uses the **database clock**, and the sweeper's `UPDATE` is idempotent;
 - the backend holds no state between requests.
 
-How to try it is documented in ASSUMPTIONS.md (e.g. `docker compose up --scale backend=2` with a second port mapping, or running a second backend container against the same `db`).
+How it is proven:
+- **Automated test** `MultiInstanceConcurrencyTests`: two independent app hosts (separate DI containers and connection pools) on `admission_test`; 50 parallel applications for 5 seats, split across both, give exactly 5 holds, and one student applying through both at once gets exactly one.
+- **Compose profile `multi`**: `docker compose --profile multi up -d --build` adds `backend2` on `:8081` (same image and configuration, started after `backend` is healthy so the startup migrations never race). `docker compose --profile multi run --rm multi-check` runs `scripts/multi-instance-check.sh` in a curl container: a new 5-seat class, 50 parallel applications, 25 to each backend; it expects exactly 5 × 201, 45 × 409 `NO_SEATS_AVAILABLE` and `heldSeats=5` on both, and exits 0 (PASS) or 1. Each run leaves one `multi-check <timestamp>` class in the real database.
 
 ## 10. Configuration
 
@@ -277,7 +279,9 @@ All configuration comes from environment variables, with `appsettings.json` defa
 | `CORS_ALLOWED_ORIGINS` | backend | `http://localhost:3000` (comma-separated list) |
 | `VITE_API_BASE_URL` | frontend **build arg** | `http://localhost:8080` |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | `db` | `admission` / `admission` / `admission` (`ConnectionStrings__Default` must use the same user and password) |
-| `TEST_DB_CONNECTION` | `backend-tests` | `Host=db;Port=5432;Database=admission_test;Username=admission;Password=admission` (built from `POSTGRES_*` in compose; the test fixture refuses any database other than `admission_test`) |
+| `TEST_DB_CONNECTION` | `backend2` | same as `backend` | `8081:8080` | profile `multi` (bonus, §9): a second backend on the same database and configuration; starts after `backend` is healthy |
+| `multi-check` | `curlimages/curl:8.11.1` | — | profile `multi`: runs `scripts/multi-instance-check.sh` against both backends; run with `docker compose --profile multi run --rm multi-check` |
+| `backend-tests` | `Host=db;Port=5432;Database=admission_test;Username=admission;Password=admission` (built from `POSTGRES_*` in compose; the test fixture refuses any database other than `admission_test`) |
 
 **Changing the backend URL** ([ADR-0003](adr/0003-frontend-backend-url.md)): Vite bakes `VITE_API_BASE_URL` into the JavaScript at build time. Compose passes it from an environment variable as a build arg, so after changing it you must run `docker compose up --build`. The README says this.
 
