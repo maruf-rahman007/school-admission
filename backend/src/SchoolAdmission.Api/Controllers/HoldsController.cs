@@ -4,12 +4,14 @@ using SchoolAdmission.Api.Filters;
 using SchoolAdmission.Api.Ids;
 using SchoolAdmission.Application.Classes;
 using SchoolAdmission.Application.Holds;
+using SchoolAdmission.Application.Holds.Commands.CancelHold;
+using SchoolAdmission.Application.Holds.Commands.ConfirmHold;
 using SchoolAdmission.Application.Holds.Commands.CreateHold;
 using SchoolAdmission.Application.Holds.Queries.GetHoldById;
 
 namespace SchoolAdmission.Api.Controllers;
 
-/// <summary>Endpoints 4–5 of the contract: apply for a seat, read an application.</summary>
+/// <summary>Endpoints 4–7 of the contract: apply for a seat, read, confirm (pay) and cancel an application.</summary>
 [ApiController]
 public sealed class HoldsController : ControllerBase
 {
@@ -44,5 +46,43 @@ public sealed class HoldsController : ControllerBase
             ? await handler.Handle(new GetHoldByIdQuery(id), cancellationToken)
             : null;
         return HoldResponse.From(found ?? throw new HoldNotFoundException(holdId));
+    }
+
+    /// <summary>
+    /// Pays for (confirms) the student's own HELD hold. 200 with the hold (same shape as GET; a repeat confirm returns it
+    /// unchanged); 400 INVALID_STUDENT_ID, 404 HOLD_NOT_FOUND, 403 NOT_HOLD_OWNER, 409 HOLD_CANCELLED, 410 HOLD_EXPIRED.
+    /// </summary>
+    [HttpPost("holds/{holdId}/confirm")]
+    [RequireStudentId]
+    [ProducesResponseType<HoldResponse>(StatusCodes.Status200OK)]
+    public async Task<HoldResponse> Confirm(
+        string holdId, [FromServices] ConfirmHoldHandler handler, CancellationToken cancellationToken)
+    {
+        if (!HoldId.TryParse(holdId, out var id))
+        {
+            throw new HoldNotFoundException(holdId);
+        }
+
+        var confirmed = await handler.Handle(new ConfirmHoldCommand(id, HttpContext.GetStudentId(), holdId), cancellationToken);
+        return HoldResponse.From(confirmed);
+    }
+
+    /// <summary>
+    /// Cancels the student's own hold. 204 for HELD, and also (idempotent, no change) for EXPIRED or CANCELLED;
+    /// 400 INVALID_STUDENT_ID, 404 HOLD_NOT_FOUND, 403 NOT_HOLD_OWNER, 409 HOLD_ALREADY_CONFIRMED.
+    /// </summary>
+    [HttpDelete("holds/{holdId}")]
+    [RequireStudentId]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Cancel(
+        string holdId, [FromServices] CancelHoldHandler handler, CancellationToken cancellationToken)
+    {
+        if (!HoldId.TryParse(holdId, out var id))
+        {
+            throw new HoldNotFoundException(holdId);
+        }
+
+        await handler.Handle(new CancelHoldCommand(id, HttpContext.GetStudentId(), holdId), cancellationToken);
+        return NoContent();
     }
 }

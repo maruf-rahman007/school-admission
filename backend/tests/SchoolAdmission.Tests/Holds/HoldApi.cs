@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using Npgsql;
 using SchoolAdmission.Tests.Infrastructure;
@@ -18,9 +19,46 @@ public static class HoldApi
     public static Guid GuidOf(string prefixedId) => Guid.ParseExact(prefixedId[2..], "N");
 
     /// <summary>POST /classes/{classId}/holds with the given header value (null = no header).</summary>
-    public static Task<HttpResponseMessage> ApplyAsync(HttpClient client, string classId, string? studentId)
+    public static Task<HttpResponseMessage> ApplyAsync(HttpClient client, string classId, string? studentId) =>
+        SendAsync(client, HttpMethod.Post, $"/classes/{classId}/holds", studentId);
+
+    /// <summary>The prefixed hold ID (<c>h_</c> + 32 lowercase hex) for a hold row's Guid.</summary>
+    public static string HoldIdOf(Guid id) => $"h_{id:N}";
+
+    /// <summary>POST /holds/{holdId}/confirm with the given header value (null = no header).</summary>
+    public static Task<HttpResponseMessage> ConfirmAsync(HttpClient client, string holdId, string? studentId) =>
+        SendAsync(client, HttpMethod.Post, $"/holds/{holdId}/confirm", studentId);
+
+    /// <summary>DELETE /holds/{holdId} with the given header value (null = no header).</summary>
+    public static Task<HttpResponseMessage> CancelAsync(HttpClient client, string holdId, string? studentId) =>
+        SendAsync(client, HttpMethod.Delete, $"/holds/{holdId}", studentId);
+
+    /// <summary>Starts every request, releases them together through one gate, and waits for all responses.</summary>
+    public static async Task<(HttpStatusCode Status, string? Code, string Body)[]> FireTogetherAsync(
+        IEnumerable<Func<Task<HttpResponseMessage>>> requests)
     {
-        var request = new HttpRequestMessage(HttpMethod.Post, $"/classes/{classId}/holds");
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var tasks = requests.Select(async send =>
+        {
+            await gate.Task;
+            var response = await send();
+            var body = await response.Content.ReadAsStringAsync(Ct);
+            string? code = null;
+            if (!response.IsSuccessStatusCode)
+            {
+                code = (await TestHost.ReadJsonAsync(response)).GetProperty("userResponse").GetProperty("code").GetString();
+            }
+
+            return (response.StatusCode, code, body);
+        }).ToArray();
+
+        gate.SetResult();
+        return await Task.WhenAll(tasks);
+    }
+
+    private static Task<HttpResponseMessage> SendAsync(HttpClient client, HttpMethod method, string url, string? studentId)
+    {
+        var request = new HttpRequestMessage(method, url);
         if (studentId is not null)
         {
             request.Headers.TryAddWithoutValidation("X-Student-Id", studentId);

@@ -155,7 +155,7 @@ sequenceDiagram
     A-->>C: 410 HOLD_EXPIRED
   else HELD and still valid
     A->>D: UPDATE status='CONFIRMED', confirmed_at=now(); COMMIT
-    A-->>C: 200 {holdId, status:"CONFIRMED"}
+    A-->>C: 200 {holdId, classId, status:"CONFIRMED", expiresAt, className, serverTime}
   end
 ```
 
@@ -212,7 +212,7 @@ sequenceDiagram
   Note over D: hold H stored as EXPIRED
 ```
 
-The frontend also counts down locally (corrected by the server time, §8.3). When the countdown reaches zero it shows EXPIRED and disables the pay button without waiting for the next poll or a page reload.
+The frontend also counts down locally (corrected by the server time, §8.3). When the countdown reaches zero it shows EXPIRED and removes the Pay and Cancel buttons without waiting for the next poll or a page reload.
 
 ## 7. Errors
 

@@ -20,6 +20,8 @@
 - **Ordering:** classes are sorted by name, number-aware and ignoring case ("Class 6" before "Class 10"), so admins see classes in the order they expect; classes with the same name are listed oldest first. A student's holds are listed newest first.
 - **Server time** is sent so the countdown stays correct even when the user's clock is wrong: an `X-Server-Time` header on every response, and a `serverTime` field on object responses. Array responses (`GET /classes`, `GET /me/holds`) keep their exact shape and rely on the header. The server time comes from the backend's clock, which in Docker is the same host clock PostgreSQL uses; expiry itself is always decided by the database clock.
 - **IDs** look like `c_<uuid>` (class) and `h_<uuid>` (hold). An ID that cannot be parsed returns 404, the same as an unknown ID.
+- **Confirm returns the full application** (the same fields as `GET /holds/{id}`), so the client can show the new state without another request.
+- **Check order on confirm and cancel:** a missing or invalid student ID (400) is reported first, then an unknown hold (404), then someone else's hold (403), then the status rules. This is the same order as Apply.
 
 ## Concurrency, expiry and scaling
 - **Seats are protected by a Postgres row lock** on the class while a hold is created, so held + confirmed can never exceed total seats. Redis was considered and rejected: it would be a second source of truth and extra infrastructure, and it isn't needed at this scale.

@@ -15,29 +15,6 @@ public sealed class CreateHoldConcurrencyTests(DatabaseFixture database) : IAsyn
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    /// <summary>Starts every request, releases them together through one gate, and waits for all responses.</summary>
-    private static async Task<(HttpStatusCode Status, string? Code, string Body)[]> FireTogetherAsync(
-        IEnumerable<Func<Task<HttpResponseMessage>>> requests)
-    {
-        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var tasks = requests.Select(async send =>
-        {
-            await gate.Task;
-            var response = await send();
-            var body = await response.Content.ReadAsStringAsync(Ct);
-            string? code = null;
-            if (!response.IsSuccessStatusCode)
-            {
-                code = (await TestHost.ReadJsonAsync(response)).GetProperty("userResponse").GetProperty("code").GetString();
-            }
-
-            return (response.StatusCode, code, body);
-        }).ToArray();
-
-        gate.SetResult();
-        return await Task.WhenAll(tasks);
-    }
-
     [Fact]
     public async Task CreateHold_FiftyParallelRequestsForFiveSeats_ExactlyFiveSucceed()
     {
@@ -46,7 +23,7 @@ public sealed class CreateHoldConcurrencyTests(DatabaseFixture database) : IAsyn
         var students = Enumerable.Range(0, 50).Select(_ => HoldApi.NewStudentId()).Distinct().ToList();
         Assert.Equal(50, students.Count);
 
-        var results = await FireTogetherAsync(
+        var results = await HoldApi.FireTogetherAsync(
             students.Select(s => (Func<Task<HttpResponseMessage>>)(() => HoldApi.ApplyAsync(client, classId, s))));
 
         var created = results.Where(r => r.Status == HttpStatusCode.Created).ToList();
@@ -87,7 +64,7 @@ public sealed class CreateHoldConcurrencyTests(DatabaseFixture database) : IAsyn
 
         var student = HoldApi.NewStudentId();
 
-        var results = await FireTogetherAsync(
+        var results = await HoldApi.FireTogetherAsync(
             classIds.Select(id => (Func<Task<HttpResponseMessage>>)(() => HoldApi.ApplyAsync(client, id, student))));
 
         Assert.Single(results, r => r.Status == HttpStatusCode.Created);

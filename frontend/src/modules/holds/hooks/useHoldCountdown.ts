@@ -18,7 +18,7 @@ export interface HoldCountdown {
  *
  * At 0, `expired` becomes true and stays true for this hold even if a later poll still says HELD (DECISIONS T-140);
  * the hold is fetched once right away to confirm, and the normal 3 s polling continues. A server CONFIRMED or
- * CANCELLED status wins over `expired`: callers check the server status first. T-150 disables Pay with `expired`.
+ * CANCELLED status wins over `expired`: callers check the server status first. T-150 removes the Pay/Cancel buttons with `expired`.
  */
 export function useHoldCountdown(holdId: string, expiresAt: string | undefined): HoldCountdown {
   const queryClient = useQueryClient()
