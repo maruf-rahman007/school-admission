@@ -3,10 +3,11 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using SchoolAdmission.Api.Middleware;
+using SchoolAdmission.Tests.Infrastructure;
 
 namespace SchoolAdmission.Tests;
 
-public class SwaggerTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public class SwaggerTests(TestAppFactory factory) : IClassFixture<TestAppFactory>
 {
     private CancellationToken Ct => TestContext.Current.CancellationToken;
 

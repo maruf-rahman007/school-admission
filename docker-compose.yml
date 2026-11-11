@@ -1,4 +1,5 @@
 # School Admission System.
+# Run:   docker compose up --build                (db, backend on :8080, frontend on :3000)
 # Tests: docker compose run --rm backend-tests   (starts db, waits until healthy, runs every backend test)
 
 services:
@@ -19,6 +20,38 @@ services:
       retries: 30
       start_period: 5s
     # Not published to the host (ARCHITECTURE §11).
+
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      # Its Username/Password must match POSTGRES_USER/POSTGRES_PASSWORD (see .env.example).
+      ConnectionStrings__Default: ${ConnectionStrings__Default:-Host=db;Port=5432;Database=admission;Username=admission;Password=admission}
+      HOLD_DURATION_SECONDS: ${HOLD_DURATION_SECONDS:-600}
+      EXPIRY_SWEEP_INTERVAL_SECONDS: ${EXPIRY_SWEEP_INTERVAL_SECONDS:-5}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8080/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    # Startup migrations run before the server listens; on failure the process exits 1 and compose restarts it.
+    restart: on-failure
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Baked in at build time (ADR-0003): after changing it run `docker compose up --build`.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
+    ports:
+      - "3000:80"
+    # Static files only: no healthcheck or depends_on; a down backend shows the offline banner in the UI.
 
   backend-tests:
     image: mcr.microsoft.com/dotnet/sdk:10.0

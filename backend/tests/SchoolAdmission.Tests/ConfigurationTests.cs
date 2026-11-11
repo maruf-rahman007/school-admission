@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration.EnvironmentVariables;
 using Microsoft.Extensions.DependencyInjection;
 using SchoolAdmission.Api.Configuration;
 using SchoolAdmission.Application.Common;
+using SchoolAdmission.Tests.Infrastructure;
 
 namespace SchoolAdmission.Tests;
 
@@ -181,7 +182,7 @@ public class ConfigurationTests
 
     private static WebApplicationFactory<Program> CreateFactory(
         Dictionary<string, string?> overrides, bool ignoreEnvironment = false) =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        new TestAppFactory().WithWebHostBuilder(builder =>
             builder.ConfigureAppConfiguration((_, config) =>
             {
                 if (ignoreEnvironment)

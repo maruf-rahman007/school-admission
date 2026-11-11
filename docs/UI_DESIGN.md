@@ -177,6 +177,21 @@ Class 3 – Evening   [বাতিল]                [দেখুন]
 | `INTERNAL_ERROR` / unknown code | সার্ভারে সমস্যা হয়েছে। একটু পরে আবার চেষ্টা করুন। | Something went wrong on the server. Please try again. |
 | Network down (no response) | সার্ভারের সাথে সংযোগ করা যাচ্ছে না। আবার চেষ্টা হচ্ছে… | Can't reach the server. Retrying… |
 
+Codes the UI never triggers (`ROUTE_NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNSUPPORTED_MEDIA_TYPE`) use the `INTERNAL_ERROR` text.
+
+### App shell
+| Where | বাংলা | English |
+|---|---|---|
+| Brand | ভর্তি | Admission |
+| Nav | ক্লাসসমূহ · আমার আবেদন · ক্লাস তৈরি (অ্যাডমিন) | Classes · My applications · Create class (admin) |
+| Menu button (☰) | মেনু | Menu |
+| Dialog ✕ (screen readers) | বন্ধ করুন | Close |
+| Header, no ID | [শিক্ষার্থী আইডি দিন] | [Enter student ID] |
+| Header, with ID | শিক্ষার্থী: … [পরিবর্তন] | Student: … [Change] |
+| ID dialog | জন্ম নিবন্ধন নম্বর দিন · ১৭ সংখ্যা · ⚠ ঠিক ১৭টি সংখ্যা দিন · [বাতিল] [সংরক্ষণ করুন] | Enter birth registration number · 17 digits · ⚠ Enter exactly 17 digits · [Cancel] [Save] |
+| Page not built yet | এই পাতাটি শীঘ্রই আসছে। | This page is coming soon. |
+| 404 page | পাতাটি পাওয়া যায়নি। · ক্লাস তালিকায় ফিরে যান | Page not found. · Back to classes |
+
 Field-level messages for `VALIDATION_FAILED` are shown under each field (texts in §5). The full UI dictionary lives in `shared/i18n/bn.ts` and `en.ts`; this document lists the user-facing strings that need agreement.
 
 ## 9. Crash screen

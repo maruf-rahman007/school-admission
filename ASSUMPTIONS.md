@@ -32,6 +32,7 @@
 - **The database connection** is the `ConnectionStrings__Default` environment variable.
 - **Backend tests** use a separate `admission_test` database, so running them never changes real data. It is recreated fresh at the start of every test run, and the test setup refuses to run against a database with any other name.
 - **Invalid configuration stops the backend at startup.** If a setting is invalid (`HOLD_DURATION_SECONDS` or `EXPIRY_SWEEP_INTERVAL_SECONDS` not a positive whole number, `CORS_ALLOWED_ORIGINS` without a valid http(s) URL, or an empty connection string), the backend refuses to start: it logs every problem and exits with code 1, so a typo can't silently change behaviour. An empty variable counts as invalid; extra spaces and a trailing `/` in the CORS list are tolerated. A CORS entry with a path, query, user name/password or `#fragment` is rejected, because none of these is a valid browser origin.
+- **A failed database migration stops the backend at startup** (logged, exit code 1), the same as invalid configuration, so it never serves requests against a half-migrated schema. Docker Compose restarts it automatically, which covers a short database hiccup.
 - **Swagger UI is always on** (`/swagger`), including in Docker, so the API can be explored from a browser during evaluation. A real deployment would restrict it.
 
 ## UI

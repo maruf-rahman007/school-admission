@@ -2,17 +2,21 @@ using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using SchoolAdmission.Api.Middleware;
+using SchoolAdmission.Tests.Infrastructure;
 
 namespace SchoolAdmission.Tests;
 
-public sealed class TwoOriginsFactory : WebApplicationFactory<Program>
+public sealed class TwoOriginsFactory : TestAppFactory
 {
     public const string FirstOrigin = "http://localhost:3000";
     public const string SecondOrigin = "http://127.0.0.1:3000";
 
-    protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder) =>
+    protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
+    {
+        base.ConfigureWebHost(builder);
         builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(
             new Dictionary<string, string?> { ["CORS_ALLOWED_ORIGINS"] = $"{FirstOrigin},{SecondOrigin}" }));
+    }
 }
 
 public class CorsTests(TwoOriginsFactory factory) : IClassFixture<TwoOriginsFactory>
