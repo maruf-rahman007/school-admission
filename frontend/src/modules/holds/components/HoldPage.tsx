@@ -5,6 +5,7 @@ import { formatCountdown } from '@/shared/lib/countdown'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { useHold } from '../hooks/useHold'
 import { useHoldCountdown } from '../hooks/useHoldCountdown'
+import { HoldActions } from './HoldActions'
 import { HoldStatusBadge } from './HoldStatusBadge'
 
 const linkClass =
@@ -13,7 +14,7 @@ const linkClass =
 /**
  * Route `/holds/:holdId` (UI_DESIGN §6): class name, status and, while HELD, a live countdown. When the countdown
  * reaches 0 (or the server says EXPIRED) the page switches at once to the EXPIRED view, without a reload, and stays
- * there (DECISIONS T-140). The Pay/Cancel buttons (T-150) come later.
+ * there (DECISIONS T-140). While HELD it offers Pay and Cancel (T-150); CONFIRMED and CANCELLED show their messages.
  */
 export function HoldPage() {
   const { holdId = '' } = useParams()
@@ -64,6 +65,17 @@ export function HoldPage() {
             {formatCountdown(countdown.seconds, lang)}
           </span>
         </p>
+      )}
+      {/* Keyed by hold, so moving to another application never carries over an open dialog. */}
+      <HoldActions key={holdId} holdId={holdId} schoolClassName={data.className} active={status === 'HELD'} />
+      {status === 'CONFIRMED' && <p className="font-medium text-green-700">{t('holds.confirmedMessage')}</p>}
+      {status === 'CANCELLED' && (
+        <div className="flex flex-col items-start gap-2">
+          <p className="text-muted-foreground">{t('holds.cancelledMessage')}</p>
+          <Link to="/" className={linkClass}>
+            {t('holds.applyAgain')}
+          </Link>
+        </div>
       )}
       {status === 'EXPIRED' && (
         <div className="flex flex-col items-start gap-2">

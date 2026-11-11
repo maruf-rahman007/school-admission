@@ -105,15 +105,15 @@ Class 2 – Day         মোট ৩০ · খালি ৩০
 ```
 The class name comes from the extra `className` field on `GET /holds/{id}` (ARCHITECTURE §2).
 
-**Built in steps.** T-130 ships a minimal version: the heading, `অবস্থা:` with the status badge, and, only while HELD, the expiry as a 24-hour clock time in local time ("মেয়াদ শেষ হবে: ১৪:৩২" / "Expires at: 14:32"). CONFIRMED, EXPIRED and CANCELLED show the badge only. The page polls every 3 s, so a hold that runs out switches to the EXPIRED badge without a reload. T-140 replaced the clock time with the live countdown ("বাকি সময়:") and added the EXPIRED view: the badge, the grey message and the "আবার আবেদন করুন" link. Once the countdown reaches 0 the page stays EXPIRED even if a poll a moment later still says HELD, and asks the server once right away. T-150 adds the buttons, dialogs and the remaining messages and links.
+**Built in steps.** T-130 ships a minimal version: the heading, `অবস্থা:` with the status badge, and, only while HELD, the expiry as a 24-hour clock time in local time ("মেয়াদ শেষ হবে: ১৪:৩২" / "Expires at: 14:32"). CONFIRMED, EXPIRED and CANCELLED show the badge only. The page polls every 3 s, so a hold that runs out switches to the EXPIRED badge without a reload. T-140 replaced the clock time with the live countdown ("বাকি সময়:") and added the EXPIRED view: the badge, the grey message and the "আবার আবেদন করুন" link. Once the countdown reaches 0 the page stays EXPIRED even if a poll a moment later still says HELD, and asks the server once right away. T-150 added the Pay and Cancel buttons (shown only while HELD; they disappear when the countdown reaches 0), their dialogs, and the CONFIRMED and CANCELLED messages and link.
 
 | Status | Display |
 |---|---|
 | Loading | Skeleton card |
-| HELD | Countdown; both buttons enabled |
+| HELD | Countdown; Pay and Cancel buttons |
 | HELD, countdown reaches 0 | Switches **immediately** to the EXPIRED view, with no wait for the next poll |
 | CONFIRMED | Green "✓ ভর্তি নিশ্চিত হয়েছে।"; no buttons |
-| EXPIRED | Grey "সময় শেষ হয়ে গেছে।"; pay disabled; link "আবার আবেদন করুন" to `/` |
+| EXPIRED | Grey "সময় শেষ হয়ে গেছে।"; no buttons; link "আবার আবেদন করুন" to `/` |
 | CANCELLED | "আবেদন বাতিল করা হয়েছে।"; link "আবার আবেদন করুন" to `/` |
 | 404 / unparseable ID | "আবেদনটি পাওয়া যায়নি।" with a link to `/` |
 | Action error (403, 409, 410) | Toast with the error text (§8); the hold is refetched |
@@ -222,6 +222,20 @@ The seat bar on a card is filled to the share of taken seats ((held + confirmed)
 | Apply spinner (screen readers) | আবেদন পাঠানো হচ্ছে… | Applying… |
 | Network down on Apply (toast) | সার্ভারের সাথে সংযোগ করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন। | Can't reach the server. Please try again later. |
 
+### Pay and Cancel (T-150)
+| Where | বাংলা | English |
+|---|---|---|
+| Buttons | ভর্তি ফি দিন · বাতিল করুন | Pay admission fee · Cancel application |
+| Pay dialog | ভর্তি ফি পরিশোধ · {class}-এর ভর্তি ফি পরিশোধ করবেন? এটি আর বাতিল করা যাবে না। · [না] [ফি দিন] | Pay admission fee · Pay the admission fee for {class}? This can't be undone. · [No] [Pay fee] |
+| Cancel dialog | আবেদন বাতিল · আবেদন বাতিল করবেন? আসনটি ছেড়ে দেওয়া হবে। · [না] [বাতিল করুন] | Cancel application · Cancel this application? The seat will be released. · [No] [Cancel application] |
+| Dialog spinner (screen readers) | পাঠানো হচ্ছে… | Sending… |
+| Success toasts | ভর্তি নিশ্চিত হয়েছে। · আবেদন বাতিল হয়েছে। | Admission confirmed. · Application cancelled. |
+| CONFIRMED view | ✓ ভর্তি নিশ্চিত হয়েছে। | ✓ Admission confirmed. |
+| CANCELLED view | আবেদন বাতিল করা হয়েছে। · আবার আবেদন করুন | This application was cancelled. · Apply again |
+| Network down on Pay/Cancel (toast) | সার্ভারের সাথে সংযোগ করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন। | Can't reach the server. Please try again later. |
+
+While a request runs the dialog can't be closed. If the hold expires while a dialog is idle, the dialog closes; a running request keeps it open until the answer arrives. Any error closes the dialog, shows a toast and refetches the hold.
+
 The "you already have an active application" banner on the class list (§4) comes with T-160, which adds `GET /me/holds`; until then a second Apply shows the `STUDENT_HAS_ACTIVE_HOLD` toast.
 
 Field-level messages for `VALIDATION_FAILED` are shown under each field (texts in §5). The full UI dictionary lives in `shared/i18n/bn.ts` and `en.ts`; this document lists the user-facing strings that need agreement.
@@ -273,6 +287,6 @@ flowchart LR
   A["/holds/:holdId (HELD)"] --> B[Countdown ticks every second]
   B --> C{reaches 0?}
   C -- no --> B
-  C -- yes --> D[EXPIRED view, pay disabled, no reload]
+  C -- yes --> D[EXPIRED view, no buttons, no reload]
   D --> E[Next poll confirms EXPIRED from server]
 ```

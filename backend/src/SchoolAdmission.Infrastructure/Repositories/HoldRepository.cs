@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
 using SchoolAdmission.Application.Abstractions;
 using SchoolAdmission.Application.Holds;
+using SchoolAdmission.Application.Holds.Commands.CancelHold;
+using SchoolAdmission.Application.Holds.Commands.ConfirmHold;
 using SchoolAdmission.Application.Holds.Commands.CreateHold;
 using SchoolAdmission.Domain;
 using SchoolAdmission.Infrastructure.Persistence;
@@ -112,6 +114,128 @@ public sealed class HoldRepository(AdmissionDbContext db) : IHoldRepository
             : new HoldDto(rows[0].Id, rows[0].ClassId, rows[0].ClassName, HoldStatusText.FromText(rows[0].Status), rows[0].ExpiresAt);
     }
 
+    public async Task<ConfirmHoldOutcome> ConfirmAsync(Guid id, string studentId, CancellationToken cancellationToken)
+    {
+        // Only the hold row is locked: HELD → CONFIRMED keeps held + confirmed unchanged (ADR-0001). A parallel confirm
+        // waits here, then sees CONFIRMED and changes nothing, so confirmedSeats goes up once.
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var hold = await LockHoldAsync(transaction, id, cancellationToken);
+        if (hold is null)
+        {
+            return await RolledBackAsync(transaction, new ConfirmHoldOutcome(ConfirmHoldResult.NotFound), cancellationToken);
+        }
+
+        if (hold.StudentId != studentId)
+        {
+            return await RolledBackAsync(transaction, new ConfirmHoldOutcome(ConfirmHoldResult.NotOwner), cancellationToken);
+        }
+
+        switch (hold.Status)
+        {
+            case "CONFIRMED":
+                return await RolledBackAsync(
+                    transaction, new ConfirmHoldOutcome(ConfirmHoldResult.Confirmed, hold.ToDto(HoldStatus.Confirmed)), cancellationToken);
+            case "CANCELLED":
+                return await RolledBackAsync(transaction, new ConfirmHoldOutcome(ConfirmHoldResult.Cancelled), cancellationToken);
+            case "HELD" when !hold.Expired:
+                await ExecuteAsync(
+                    transaction,
+                    "UPDATE holds SET status = 'CONFIRMED', confirmed_at = now() WHERE id = @id",
+                    cancellationToken,
+                    ("id", id));
+                await transaction.CommitAsync(cancellationToken);
+                return new ConfirmHoldOutcome(ConfirmHoldResult.Confirmed, hold.ToDto(HoldStatus.Confirmed));
+            default:
+                // EXPIRED, or HELD past expires_at: store EXPIRED (committed) and answer 410.
+                await ExpireAsync(transaction, hold, cancellationToken);
+                return new ConfirmHoldOutcome(ConfirmHoldResult.Expired);
+        }
+    }
+
+    public async Task<CancelHoldResult> CancelAsync(Guid id, string studentId, CancellationToken cancellationToken)
+    {
+        // Only the hold row is locked: cancelling frees a seat and can never overbook (ADR-0001).
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var hold = await LockHoldAsync(transaction, id, cancellationToken);
+        if (hold is null)
+        {
+            return await RolledBackAsync(transaction, CancelHoldResult.NotFound, cancellationToken);
+        }
+
+        if (hold.StudentId != studentId)
+        {
+            return await RolledBackAsync(transaction, CancelHoldResult.NotOwner, cancellationToken);
+        }
+
+        switch (hold.Status)
+        {
+            case "CONFIRMED":
+                return await RolledBackAsync(transaction, CancelHoldResult.Confirmed, cancellationToken);
+            case "HELD" when !hold.Expired:
+                await ExecuteAsync(
+                    transaction,
+                    "UPDATE holds SET status = 'CANCELLED', cancelled_at = now() WHERE id = @id",
+                    cancellationToken,
+                    ("id", id));
+                await transaction.CommitAsync(cancellationToken);
+                return CancelHoldResult.Cancelled;
+            default:
+                // CANCELLED or EXPIRED stay as they are; HELD past expires_at is stored EXPIRED. 204 either way.
+                await ExpireAsync(transaction, hold, cancellationToken);
+                return CancelHoldResult.Unchanged;
+        }
+    }
+
+    /// <summary>
+    /// Locks one hold row (never the class row: <c>FOR UPDATE OF h</c>) and reads it with its class name and whether it has
+    /// run out on the database clock. Null if the hold does not exist.
+    /// </summary>
+    private async Task<LockedHold?> LockHoldAsync(IDbContextTransaction transaction, Guid id, CancellationToken cancellationToken)
+    {
+        await using var command = CreateCommand(
+            transaction,
+            """
+            SELECT h.student_id, h.status, h.expires_at <= now() AS expired, h.class_id, c.name, h.expires_at
+            FROM holds h
+            JOIN classes c ON c.id = h.class_id
+            WHERE h.id = @id
+            FOR UPDATE OF h
+            """,
+            [("id", id)]);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken))
+        {
+            return null;
+        }
+
+        return new LockedHold(
+            id,
+            reader.GetString(0),
+            reader.GetString(1),
+            reader.GetBoolean(2),
+            reader.GetGuid(3),
+            reader.GetString(4),
+            new DateTimeOffset(reader.GetDateTime(5), TimeSpan.Zero));
+    }
+
+    /// <summary>Writes EXPIRED for a HELD hold that has run out, then commits; any other hold is left unchanged.</summary>
+    private async Task ExpireAsync(IDbContextTransaction transaction, LockedHold hold, CancellationToken cancellationToken)
+    {
+        if (hold.Status == "HELD")
+        {
+            await ExecuteAsync(transaction, "UPDATE holds SET status = 'EXPIRED' WHERE id = @id", cancellationToken, ("id", hold.Id));
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+    }
+
+    /// <summary>Rolls back (releasing the row lock) and returns <paramref name="result"/>.</summary>
+    private static async Task<T> RolledBackAsync<T>(IDbContextTransaction transaction, T result, CancellationToken cancellationToken)
+    {
+        await transaction.RollbackAsync(cancellationToken);
+        return result;
+    }
+
     private static async Task<CreateHoldOutcome> RollbackAsync(
         IDbContextTransaction transaction, CreateHoldResult result, CancellationToken cancellationToken)
     {
@@ -158,5 +282,11 @@ public sealed class HoldRepository(AdmissionDbContext db) : IHoldRepository
         public string Status { get; init; } = string.Empty;
 
         public DateTimeOffset ExpiresAt { get; init; }
+    }
+
+    private sealed record LockedHold(
+        Guid Id, string StudentId, string Status, bool Expired, Guid ClassId, string ClassName, DateTimeOffset ExpiresAt)
+    {
+        public HoldDto ToDto(HoldStatus status) => new(Id, ClassId, ClassName, status, ExpiresAt);
     }
 }
