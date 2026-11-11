@@ -192,6 +192,22 @@ Codes the UI never triggers (`ROUTE_NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNSUPPORT
 | Page not built yet | এই পাতাটি শীঘ্রই আসছে। | This page is coming soon. |
 | 404 page | পাতাটি পাওয়া যায়নি। · ক্লাস তালিকায় ফিরে যান | Page not found. · Back to classes |
 
+### Class list and create class (T-120)
+| Where | বাংলা | English |
+|---|---|---|
+| List heading | ক্লাসসমূহ | Classes |
+| Card counts | মোট · অপেক্ষমাণ · নিশ্চিত · খালি আসন: | Total · Pending · Confirmed · Available: |
+| Apply / class full | আবেদন করুন / আসন নেই | Apply / No seats |
+| Empty list | এখনো কোনো ক্লাস নেই। · ক্লাস তৈরি করুন | No classes yet. · Create a class |
+| Admin title / button | ক্লাস তৈরি করুন / তৈরি করুন | Create class / Create |
+| Field labels | ক্লাস/শিফটের নাম · মোট আসন | Class/shift name · Total seats |
+| Field errors | ক্লাসের নাম দিন। · আসন সংখ্যা ১ বা তার বেশি পূর্ণসংখ্যা হতে হবে। | Enter the class name. · Seats must be a whole number of 1 or more. |
+| Success toast | ক্লাস তৈরি হয়েছে। | Class created. |
+| Network down on submit (toast) | সার্ভারের সাথে সংযোগ করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন। | Can't reach the server. Please try again later. |
+| Compact list | বিদ্যমান ক্লাস · মোট ৪০ · খালি ২৭ | Existing classes · Total 40 · Available 27 |
+
+The seat bar on a card is filled to the share of taken seats ((held + confirmed) / total). The seats field accepts English digits only (surrounding spaces and leading zeros are fine); errors appear once a field is left or the form is submitted, and a server error under a field disappears when that field is edited.
+
 Field-level messages for `VALIDATION_FAILED` are shown under each field (texts in §5). The full UI dictionary lives in `shared/i18n/bn.ts` and `en.ts`; this document lists the user-facing strings that need agreement.
 
 ## 9. Crash screen

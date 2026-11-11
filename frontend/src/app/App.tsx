@@ -1,6 +1,8 @@
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router'
+import { AdminPage, ClassListPage } from '@/modules/classes'
 import { StudentIdHeader } from '@/modules/student'
 import { OfflineBanner } from '@/shared/ui/OfflineBanner'
+import { Toaster } from '@/shared/ui/sonner'
 import { ErrorBoundary } from './ErrorBoundary'
 import { Header } from './Header'
 import { NotFoundPage, PlaceholderPage } from './pages'
@@ -14,6 +16,7 @@ function Layout() {
       <main className="mx-auto max-w-5xl px-4 py-6">
         <Outlet />
       </main>
+      <Toaster position="top-center" />
     </div>
   )
 }
@@ -25,8 +28,8 @@ export function App() {
         <BrowserRouter>
           <Routes>
             <Route element={<Layout />}>
-              <Route index element={<PlaceholderPage />} />
-              <Route path="admin" element={<PlaceholderPage />} />
+              <Route index element={<ClassListPage />} />
+              <Route path="admin" element={<AdminPage />} />
               <Route path="holds/:holdId" element={<PlaceholderPage />} />
               <Route path="me" element={<PlaceholderPage />} />
               <Route path="*" element={<NotFoundPage />} />
