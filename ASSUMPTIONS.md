@@ -1,6 +1,5 @@
 # Assumptions
 
-
 ## Holds & admission
 - **One active application per student across all classes.** A student with a HELD or CONFIRMED hold in any class cannot apply to another class (409). A student can only be admitted to one class/shift, and blocking parallel holds stops one family from tying up seats in several shifts during the rush.
 - **Re-applying is allowed** right after a hold expires or is cancelled, because those holds are no longer active.
@@ -41,7 +40,9 @@
 - **Bangla/English toggle**, defaulting to Bangla, with the choice remembered. Error text is chosen from the error `code` on the frontend.
 - **Seat counts and hold status refresh every 3 seconds.**
 - **Bangla digits** are shown in Bangla mode. The student-ID box accepts Bangla or English digits and sends English digits.
-- **The student ID is asked for only when needed** (on Apply or on "My applications"), so anyone can browse classes, and the admin page needs no ID. The ID is remembered in the browser.
+- **The student ID box is in the page header** (shown with a Change button; entered in a small dialog). **It is asked for only when needed** (on Apply, Pay, Cancel or "My applications"), so anyone can browse classes, and the admin page needs no ID. The ID is remembered in the browser.
+- **"My applications" shows every application**, newest first, including expired and cancelled ones, so a parent can see what happened to each; each one links to its page.
+- **When the countdown reaches zero the application shows EXPIRED at once** and the Pay button disappears, without waiting for the next refresh; the server's own check (database clock) still decides.
 - **Only one application at a time:** while a student has an active application, Apply buttons are disabled with a link to it, matching the one-active-hold rule.
 - **Paying and cancelling ask for confirmation first**, because a confirmed admission can't be undone.
 - **The admin page is not protected**, because the spec has no login. In a real system it would be behind authentication.
