@@ -1,6 +1,8 @@
 # School Admission System.
 # Run:   docker compose up --build                (db, backend on :8080, frontend on :3000)
 # Tests: docker compose run --rm backend-tests   (starts db, waits until healthy, runs every backend test)
+# Bonus: docker compose --profile multi up -d --build   (adds backend2 on :8081, same database; also runs multi-check once)
+#        docker compose --profile multi run --rm multi-check   (50 parallel applications over both; PASS = no overbooking)
 
 services:
   db:
@@ -52,6 +54,44 @@ services:
     ports:
       - "3000:80"
     # Static files only: no healthcheck or depends_on; a down backend shows the offline banner in the UI.
+
+  # Bonus (ARCHITECTURE §9): a second backend process on another port, same database and same configuration.
+  backend2:
+    build: ./backend
+    profiles: ["multi"]
+    ports:
+      - "8081:8080"
+    environment:
+      ConnectionStrings__Default: ${ConnectionStrings__Default:-Host=db;Port=5432;Database=admission;Username=admission;Password=admission}
+      HOLD_DURATION_SECONDS: ${HOLD_DURATION_SECONDS:-600}
+      EXPIRY_SWEEP_INTERVAL_SECONDS: ${EXPIRY_SWEEP_INTERVAL_SECONDS:-5}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+    depends_on:
+      db:
+        condition: service_healthy
+      # Starts after backend has applied the migrations, so two startup migrations never race.
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8080/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: on-failure
+
+  # Bonus check: fires 50 parallel applications at a new 5-seat class, half to each backend (scripts/multi-instance-check.sh).
+  multi-check:
+    image: curlimages/curl:8.11.1
+    profiles: ["multi"]
+    depends_on:
+      backend:
+        condition: service_healthy
+      backend2:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts:ro
+    entrypoint: ["sh", "/scripts/multi-instance-check.sh"]
 
   backend-tests:
     image: mcr.microsoft.com/dotnet/sdk:10.0
