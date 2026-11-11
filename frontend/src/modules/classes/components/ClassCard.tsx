@@ -10,7 +10,7 @@ interface ClassCardProps {
   onApply: (classId: string) => void
   /** This card's application is being sent (spinner). */
   applying: boolean
-  /** Some application is being sent: every Apply button waits (UI_DESIGN §4). */
+  /** Some application is being sent, or the student already has an active one: every Apply button waits (UI_DESIGN §4). */
   applyLocked: boolean
 }
 

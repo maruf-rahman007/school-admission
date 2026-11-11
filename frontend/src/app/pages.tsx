@@ -1,16 +1,6 @@
 import { Link } from 'react-router'
 import { useI18n } from '@/shared/i18n'
 
-/** Stand-in for a screen that a later feature ticket builds (T-120 to T-160). */
-export function PlaceholderPage() {
-  const { t } = useI18n()
-  return (
-    <p className="rounded-lg border border-dashed px-4 py-10 text-center text-muted-foreground">
-      {t('page.comingSoon')}
-    </p>
-  )
-}
-
 export function NotFoundPage() {
   const { t } = useI18n()
   return (

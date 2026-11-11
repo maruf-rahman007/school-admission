@@ -20,7 +20,6 @@ export const en: Dictionary = {
   'common.close': 'Close',
   'common.save': 'Save',
 
-  'page.comingSoon': 'This page is coming soon.',
   'notFound.title': 'Page not found.',
   'notFound.back': 'Back to classes',
   'crash.title': 'Something went wrong.',
@@ -70,6 +69,14 @@ export const en: Dictionary = {
   'holds.cancelledToast': 'Application cancelled.',
   'holds.confirmedMessage': '✓ Admission confirmed.',
   'holds.cancelledMessage': 'This application was cancelled.',
+
+  'me.heading': 'My applications',
+  'me.view': 'View',
+  'me.empty': 'You have no applications.',
+  'me.emptyLink': 'See classes',
+  'me.noId': 'Enter the student ID to see applications.',
+  'classes.activeBanner': 'You have an active application.',
+  'classes.activeBannerLink': 'View',
 
   'error.NO_SEATS_AVAILABLE': 'Sorry, no seats are left in this class.',
   'error.STUDENT_HAS_ACTIVE_HOLD': 'You already have an active application.',

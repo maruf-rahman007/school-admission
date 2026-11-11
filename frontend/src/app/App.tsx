@@ -1,12 +1,12 @@
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router'
 import { AdminPage, ClassListPage } from '@/modules/classes'
-import { HoldPage } from '@/modules/holds'
+import { HoldPage, MyApplicationsPage } from '@/modules/holds'
 import { StudentIdHeader } from '@/modules/student'
 import { OfflineBanner } from '@/shared/ui/OfflineBanner'
 import { Toaster } from '@/shared/ui/sonner'
 import { ErrorBoundary } from './ErrorBoundary'
 import { Header } from './Header'
-import { NotFoundPage, PlaceholderPage } from './pages'
+import { NotFoundPage } from './pages'
 import { Providers } from './providers'
 
 function Layout() {
@@ -32,7 +32,7 @@ export function App() {
               <Route index element={<ClassListPage />} />
               <Route path="admin" element={<AdminPage />} />
               <Route path="holds/:holdId" element={<HoldPage />} />
-              <Route path="me" element={<PlaceholderPage />} />
+              <Route path="me" element={<MyApplicationsPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>

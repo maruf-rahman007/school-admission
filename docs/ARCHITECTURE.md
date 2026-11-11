@@ -89,6 +89,8 @@ Every read computes the counts from the `holds` table, so they are correct even 
 | `confirmedSeats` | count of holds with `status = 'CONFIRMED'` |
 | `availableSeats` | `totalSeats − heldSeats − confirmedSeats` |
 
+**`GET /me/holds`** lists the student's holds newest first (`created_at DESC, id DESC`; `ix_holds_student_created` serves the student filter and date order), each with its effective status.
+
 **Effective status:** when a hold is read, a stored `HELD` whose `expires_at <= now()` is reported as `EXPIRED`. Clients never see a HELD hold that has run out of time.
 
 ## 5. Write flows

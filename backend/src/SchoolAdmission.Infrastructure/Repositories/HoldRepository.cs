@@ -114,6 +114,29 @@ public sealed class HoldRepository(AdmissionDbContext db) : IHoldRepository
             : new HoldDto(rows[0].Id, rows[0].ClassId, rows[0].ClassName, HoldStatusText.FromText(rows[0].Status), rows[0].ExpiresAt);
     }
 
+    public async Task<IReadOnlyList<HoldDto>> ListByStudentAsync(string studentId, CancellationToken cancellationToken)
+    {
+        // One read (ix_holds_student_created serves the student filter and date order); effective status on the database clock, like FindAsync.
+        var rows = await db.Database.SqlQueryRaw<HoldRow>(
+                """
+                SELECT h.id AS "Id",
+                       h.class_id AS "ClassId",
+                       c.name AS "ClassName",
+                       CASE WHEN h.status = 'HELD' AND h.expires_at <= now() THEN 'EXPIRED' ELSE h.status END AS "Status",
+                       h.expires_at AS "ExpiresAt"
+                FROM holds h
+                JOIN classes c ON c.id = h.class_id
+                WHERE h.student_id = {0}
+                ORDER BY h.created_at DESC, h.id DESC
+                """,
+                studentId)
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(row => new HoldDto(row.Id, row.ClassId, row.ClassName, HoldStatusText.FromText(row.Status), row.ExpiresAt))
+            .ToList();
+    }
+
     public async Task<ConfirmHoldOutcome> ConfirmAsync(Guid id, string studentId, CancellationToken cancellationToken)
     {
         // Only the hold row is locked: HELD → CONFIRMED keeps held + confirmed unchanged (ADR-0001). A parallel confirm

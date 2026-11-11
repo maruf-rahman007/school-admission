@@ -8,10 +8,11 @@ using SchoolAdmission.Application.Holds.Commands.CancelHold;
 using SchoolAdmission.Application.Holds.Commands.ConfirmHold;
 using SchoolAdmission.Application.Holds.Commands.CreateHold;
 using SchoolAdmission.Application.Holds.Queries.GetHoldById;
+using SchoolAdmission.Application.Holds.Queries.GetMyHolds;
 
 namespace SchoolAdmission.Api.Controllers;
 
-/// <summary>Endpoints 4–7 of the contract: apply for a seat, read, confirm (pay) and cancel an application.</summary>
+/// <summary>Endpoints 4–8 of the contract: apply for a seat, read, confirm (pay), cancel, and list my applications.</summary>
 [ApiController]
 public sealed class HoldsController : ControllerBase
 {
@@ -84,5 +85,18 @@ public sealed class HoldsController : ControllerBase
 
         await handler.Handle(new CancelHoldCommand(id, HttpContext.GetStudentId(), holdId), cancellationToken);
         return NoContent();
+    }
+
+    /// <summary>
+    /// Every application of the student in <c>X-Student-Id</c>, newest first, with effective status (an expired HELD reads
+    /// EXPIRED). 200 with a bare array (empty when none); 400 INVALID_STUDENT_ID.
+    /// </summary>
+    [HttpGet("me/holds")]
+    [RequireStudentId]
+    [ProducesResponseType<IReadOnlyList<MyHoldResponse>>(StatusCodes.Status200OK)]
+    public async Task<IReadOnlyList<MyHoldResponse>> Mine([FromServices] GetMyHoldsHandler handler, CancellationToken cancellationToken)
+    {
+        var holds = await handler.Handle(new GetMyHoldsQuery(HttpContext.GetStudentId()), cancellationToken);
+        return holds.Select(MyHoldResponse.From).ToList();
     }
 }

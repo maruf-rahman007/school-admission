@@ -144,7 +144,7 @@ Class 1 – Morning   [অপেক্ষমাণ]   ০৮:১২   [দেখ
 Class 2 – Day       [মেয়াদ শেষ]           [দেখুন]
 Class 3 – Evening   [বাতিল]                [দেখুন]
 ```
-- Newest first, as returned by `GET /me/holds`. HELD rows show a live countdown and switch to EXPIRED at 0.
+- Newest first, as returned by `GET /me/holds`. Every row has the "দেখুন" link. HELD rows show a live countdown and switch to EXPIRED at 0 (sticky; the list is fetched once right away).
 - **Loading:** skeleton rows. **Empty:** "আপনার কোনো আবেদন নেই।" with a link "ক্লাস দেখুন" to `/`.
 - **No ID saved:** the ID dialog opens. If the parent dismisses it, the page shows "আবেদন দেখতে শিক্ষার্থী আইডি দিন।" with a button that reopens the dialog.
 
@@ -191,7 +191,6 @@ Codes the UI never triggers (`ROUTE_NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNSUPPORT
 | Header, no ID | [শিক্ষার্থী আইডি দিন] | [Enter student ID] |
 | Header, with ID | শিক্ষার্থী: … [পরিবর্তন] | Student: … [Change] |
 | ID dialog | জন্ম নিবন্ধন নম্বর দিন · ১৭ সংখ্যা · ⚠ ঠিক ১৭টি সংখ্যা দিন · [বাতিল] [সংরক্ষণ করুন] | Enter birth registration number · 17 digits · ⚠ Enter exactly 17 digits · [Cancel] [Save] |
-| Page not built yet | এই পাতাটি শীঘ্রই আসছে। | This page is coming soon. |
 | 404 page | পাতাটি পাওয়া যায়নি। · ক্লাস তালিকায় ফিরে যান | Page not found. · Back to classes |
 
 ### Class list and create class (T-120)
@@ -236,7 +235,16 @@ The seat bar on a card is filled to the share of taken seats ((held + confirmed)
 
 While a request runs the dialog can't be closed. If the hold expires while a dialog is idle, the dialog closes; a running request keeps it open until the answer arrives. Any error closes the dialog, shows a toast and refetches the hold.
 
-The "you already have an active application" banner on the class list (§4) comes with T-160, which adds `GET /me/holds`; until then a second Apply shows the `STUDENT_HAS_ACTIVE_HOLD` toast.
+### My applications and class-list banner (T-160)
+| Where | বাংলা | English |
+|---|---|---|
+| `/me` heading | আমার আবেদন | My applications |
+| Row link | দেখুন | View |
+| Empty list | আপনার কোনো আবেদন নেই। · ক্লাস দেখুন | You have no applications. · See classes |
+| No ID saved | আবেদন দেখতে শিক্ষার্থী আইডি দিন। · [শিক্ষার্থী আইডি দিন] | Enter the student ID to see applications. · [Enter student ID] |
+| Class-list banner | আপনার একটি সক্রিয় আবেদন আছে। · দেখুন | You have an active application. · View |
+
+Every `/me` row links to its application, whatever its status. The class-list banner and the disabled Apply buttons come from `GET /me/holds`; until that has answered (or with no ID saved) Apply stays enabled and the server's 409 toast is the fallback. After a hold expires the banner goes on the next 3 s poll.
 
 Field-level messages for `VALIDATION_FAILED` are shown under each field (texts in §5). The full UI dictionary lives in `shared/i18n/bn.ts` and `en.ts`; this document lists the user-facing strings that need agreement.
 
