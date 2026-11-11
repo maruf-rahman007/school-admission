@@ -1,5 +1,6 @@
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router'
 import { AdminPage, ClassListPage } from '@/modules/classes'
+import { HoldPage } from '@/modules/holds'
 import { StudentIdHeader } from '@/modules/student'
 import { OfflineBanner } from '@/shared/ui/OfflineBanner'
 import { Toaster } from '@/shared/ui/sonner'
@@ -30,7 +31,7 @@ export function App() {
             <Route element={<Layout />}>
               <Route index element={<ClassListPage />} />
               <Route path="admin" element={<AdminPage />} />
-              <Route path="holds/:holdId" element={<PlaceholderPage />} />
+              <Route path="holds/:holdId" element={<HoldPage />} />
               <Route path="me" element={<PlaceholderPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>

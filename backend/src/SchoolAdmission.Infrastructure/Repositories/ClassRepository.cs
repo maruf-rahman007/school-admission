@@ -8,6 +8,19 @@ namespace SchoolAdmission.Infrastructure.Repositories;
 
 public sealed class ClassRepository(AdmissionDbContext db) : IClassRepository
 {
+    // Seat counts straight from holds (ARCHITECTURE §4), judged by the database clock (ADR-0002):
+    // a HELD hold counts only while expires_at > now(), even if the sweeper has not marked it EXPIRED yet.
+    private const string SelectWithCounts = """
+        SELECT c.id AS "Id",
+               c.name AS "Name",
+               c.total_seats AS "TotalSeats",
+               (SELECT count(*)::int FROM holds h
+                 WHERE h.class_id = c.id AND h.status = 'HELD' AND h.expires_at > now()) AS "HeldSeats",
+               (SELECT count(*)::int FROM holds h
+                 WHERE h.class_id = c.id AND h.status = 'CONFIRMED') AS "ConfirmedSeats"
+        FROM classes c
+        """;
+
     public async Task<SchoolClass> AddAsync(SchoolClass schoolClass, CancellationToken cancellationToken)
     {
         db.Classes.Add(schoolClass);
@@ -16,16 +29,37 @@ public sealed class ClassRepository(AdmissionDbContext db) : IClassRepository
         return schoolClass;
     }
 
-    // One statement; ORDER BY name uses the column's numeric_ci collation.
-    public async Task<IReadOnlyList<ClassDto>> ListAsync(CancellationToken cancellationToken) =>
-        await ToDtos(db.Classes.AsNoTracking()
-                .OrderBy(c => c.Name).ThenBy(c => c.CreatedAt).ThenBy(c => c.Id))
+    // One statement for all classes; ORDER BY name uses the column's numeric_ci collation.
+    public async Task<IReadOnlyList<ClassDto>> ListAsync(CancellationToken cancellationToken)
+    {
+        var rows = await db.Database
+            .SqlQueryRaw<ClassRow>(SelectWithCounts + " ORDER BY c.name, c.created_at, c.id")
             .ToListAsync(cancellationToken);
+        return [.. rows.Select(ToDto)];
+    }
 
-    public Task<ClassDto?> FindAsync(Guid id, CancellationToken cancellationToken) =>
-        ToDtos(db.Classes.AsNoTracking().Where(c => c.Id == id)).SingleOrDefaultAsync(cancellationToken);
+    public async Task<ClassDto?> FindAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var rows = await db.Database
+            .SqlQueryRaw<ClassRow>(SelectWithCounts + " WHERE c.id = {0}", id)
+            .ToListAsync(cancellationToken);
+        return rows.Count == 0 ? null : ToDto(rows[0]);
+    }
 
-    // No holds table yet: nothing held or confirmed, all seats available. T-130 counts the holds here.
-    private static IQueryable<ClassDto> ToDtos(IQueryable<SchoolClass> classes) =>
-        classes.Select(c => new ClassDto(c.Id, c.Name, c.TotalSeats, 0, 0, c.TotalSeats));
+    // Not clamped: held + confirmed never exceeds total through the API, and a negative value would expose a bug.
+    private static ClassDto ToDto(ClassRow r) =>
+        new(r.Id, r.Name, r.TotalSeats, r.HeldSeats, r.ConfirmedSeats, r.TotalSeats - r.HeldSeats - r.ConfirmedSeats);
+
+    private sealed class ClassRow
+    {
+        public Guid Id { get; init; }
+
+        public string Name { get; init; } = string.Empty;
+
+        public int TotalSeats { get; init; }
+
+        public int HeldSeats { get; init; }
+
+        public int ConfirmedSeats { get; init; }
+    }
 }

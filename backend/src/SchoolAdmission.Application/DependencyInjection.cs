@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using SchoolAdmission.Application.Classes.Commands.CreateClass;
 using SchoolAdmission.Application.Classes.Queries.GetClassById;
 using SchoolAdmission.Application.Classes.Queries.GetClasses;
+using SchoolAdmission.Application.Holds.Commands.CreateHold;
+using SchoolAdmission.Application.Holds.Queries.GetHoldById;
 
 namespace SchoolAdmission.Application;
 
@@ -15,6 +17,8 @@ public static class DependencyInjection
         services.AddScoped<CreateClassHandler>();
         services.AddScoped<GetClassesHandler>();
         services.AddScoped<GetClassByIdHandler>();
+        services.AddScoped<CreateHoldHandler>();
+        services.AddScoped<GetHoldByIdHandler>();
         return services;
     }
 }

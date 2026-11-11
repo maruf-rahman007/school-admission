@@ -1,10 +1,21 @@
+import { Loader2Icon } from 'lucide-react'
 import { useI18n } from '@/shared/i18n'
 import { formatDigits } from '@/shared/lib/digits'
 import { Button } from '@/shared/ui/button'
 import type { ClassSummary } from '../types'
 
-/** One class with its live seat counts (UI_DESIGN §4). */
-export function ClassCard({ schoolClass }: { schoolClass: ClassSummary }) {
+interface ClassCardProps {
+  schoolClass: ClassSummary
+  /** Called when Apply is clicked. */
+  onApply: (classId: string) => void
+  /** This card's application is being sent (spinner). */
+  applying: boolean
+  /** Some application is being sent: every Apply button waits (UI_DESIGN §4). */
+  applyLocked: boolean
+}
+
+/** One class with its live seat counts and the Apply button (UI_DESIGN §4). */
+export function ClassCard({ schoolClass, onApply, applying, applyLocked }: ClassCardProps) {
   const { t, lang } = useI18n()
   const n = (value: number) => formatDigits(value, lang)
   const { name, totalSeats, heldSeats, confirmedSeats, availableSeats } = schoolClass
@@ -28,8 +39,11 @@ export function ClassCard({ schoolClass }: { schoolClass: ClassSummary }) {
         </div>
       </div>
       <div className="flex justify-end">
-        {/* Placeholder until T-130 wires up applying; only a full class changes the label. */}
-        <Button disabled>{full ? t('classes.full') : t('classes.apply')}</Button>
+        <Button disabled={full || applyLocked} aria-busy={applying} onClick={() => onApply(schoolClass.id)}>
+          {applying && <Loader2Icon aria-hidden="true" className="animate-spin" />}
+          {applying && <span className="sr-only">{t('holds.applying')}</span>}
+          {full ? t('classes.full') : t('classes.apply')}
+        </Button>
       </div>
     </article>
   )

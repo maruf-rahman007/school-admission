@@ -23,6 +23,67 @@ namespace SchoolAdmission.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("SchoolAdmission.Domain.Hold", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_at");
+
+                    b.Property<Guid>("ClassId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("class_id");
+
+                    b.Property<DateTimeOffset?>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StudentId")
+                        .IsRequired()
+                        .HasColumnType("varchar(17)")
+                        .HasColumnName("student_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_holds");
+
+                    b.HasIndex("StudentId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_holds_one_active_per_student")
+                        .HasFilter("status IN ('HELD','CONFIRMED')");
+
+                    b.HasIndex("StudentId", "CreatedAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_holds_student_created");
+
+                    b.HasIndex("ClassId", "Status", "ExpiresAt")
+                        .HasDatabaseName("ix_holds_class_status");
+
+                    b.ToTable("holds", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_holds_status", "status IN ('HELD','CONFIRMED','EXPIRED','CANCELLED')");
+
+                            t.HasCheckConstraint("ck_holds_student_id_digits", "student_id ~ '^[0-9]{17}$'");
+                        });
+                });
+
             modelBuilder.Entity("SchoolAdmission.Domain.SchoolClass", b =>
                 {
                     b.Property<Guid>("Id")
@@ -52,6 +113,16 @@ namespace SchoolAdmission.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_classes_total_seats_positive", "total_seats > 0");
                         });
+                });
+
+            modelBuilder.Entity("SchoolAdmission.Domain.Hold", b =>
+                {
+                    b.HasOne("SchoolAdmission.Domain.SchoolClass", null)
+                        .WithMany()
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired()
+                        .HasConstraintName("fk_holds_classes_class_id");
                 });
 #pragma warning restore 612, 618
         }

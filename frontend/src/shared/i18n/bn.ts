@@ -47,6 +47,15 @@ export const bn = {
   'admin.existing': 'বিদ্যমান ক্লাস',
   'admin.availableShort': 'খালি',
 
+  'holds.heading': 'আবেদন',
+  'holds.statusLabel': 'অবস্থা:',
+  'holds.expiresAt': 'মেয়াদ শেষ হবে:',
+  'holds.status.HELD': 'অপেক্ষমাণ',
+  'holds.status.CONFIRMED': 'ভর্তি নিশ্চিত',
+  'holds.status.EXPIRED': 'মেয়াদ শেষ',
+  'holds.status.CANCELLED': 'বাতিল',
+  'holds.applying': 'আবেদন পাঠানো হচ্ছে…',
+
   'error.NO_SEATS_AVAILABLE': 'দুঃখিত, এই ক্লাসে আর কোনো আসন খালি নেই।',
   'error.STUDENT_HAS_ACTIVE_HOLD': 'আপনার ইতিমধ্যে একটি সক্রিয় আবেদন আছে।',
   'error.HOLD_EXPIRED': 'সময় শেষ হয়ে গেছে। আবার আবেদন করুন।',

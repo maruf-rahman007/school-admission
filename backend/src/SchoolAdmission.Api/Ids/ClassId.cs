@@ -7,34 +7,13 @@ namespace SchoolAdmission.Api.Ids;
 public static class ClassId
 {
     public const string Prefix = "c_";
-    private const int HexLength = 32;
 
     /// <summary>Formats as <c>c_</c> + 32 lowercase hex characters.</summary>
-    public static string Format(Guid id) => Prefix + id.ToString("N");
+    public static string Format(Guid id) => PrefixedId.Format(Prefix, id);
 
     /// <summary>
     /// Accepts exactly <c>c_</c> + 32 ASCII hex characters (either case). Anything else, including dashed or braced
     /// UUIDs, other prefixes, whitespace or non-ASCII digits, is not a class ID. Never throws.
     /// </summary>
-    public static bool TryParse(string? value, out Guid id)
-    {
-        id = Guid.Empty;
-        if (value is null
-            || value.Length != Prefix.Length + HexLength
-            || !value.StartsWith(Prefix, StringComparison.Ordinal))
-        {
-            return false;
-        }
-
-        var hex = value.AsSpan(Prefix.Length);
-        foreach (var c in hex)
-        {
-            if (!char.IsAsciiHexDigit(c))
-            {
-                return false;
-            }
-        }
-
-        return Guid.TryParseExact(hex, "N", out id);
-    }
+    public static bool TryParse(string? value, out Guid id) => PrefixedId.TryParse(Prefix, value, out id);
 }

@@ -105,6 +105,8 @@ Class 2 – Day         মোট ৩০ · খালি ৩০
 ```
 The class name comes from the extra `className` field on `GET /holds/{id}` (ARCHITECTURE §2).
 
+**Built in steps.** T-130 ships a minimal version: the heading, `অবস্থা:` with the status badge, and, only while HELD, the expiry as a 24-hour clock time in local time ("মেয়াদ শেষ হবে: ১৪:৩২" / "Expires at: 14:32"). CONFIRMED, EXPIRED and CANCELLED show the badge only. The page polls every 3 s, so a hold that runs out switches to the EXPIRED badge without a reload. T-140 replaces the clock time with the countdown and adds the EXPIRED message; T-150 adds the buttons, dialogs and the remaining messages and links.
+
 | Status | Display |
 |---|---|
 | Loading | Skeleton card |
@@ -207,6 +209,18 @@ Codes the UI never triggers (`ROUTE_NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNSUPPORT
 | Compact list | বিদ্যমান ক্লাস · মোট ৪০ · খালি ২৭ | Existing classes · Total 40 · Available 27 |
 
 The seat bar on a card is filled to the share of taken seats ((held + confirmed) / total). The seats field accepts English digits only (surrounding spaces and leading zeros are fine); errors appear once a field is left or the form is submitted, and a server error under a field disappears when that field is edited.
+
+### Application and Apply (T-130)
+| Where | বাংলা | English |
+|---|---|---|
+| Application heading | আবেদন — {class name} | Application — {class name} |
+| Status label | অবস্থা: | Status: |
+| Expiry (until T-140's countdown) | মেয়াদ শেষ হবে: ১৪:৩২ | Expires at: 14:32 |
+| Application not found | আবেদনটি পাওয়া যায়নি। · ক্লাস তালিকায় ফিরে যান | Application not found. · Back to classes |
+| Apply spinner (screen readers) | আবেদন পাঠানো হচ্ছে… | Applying… |
+| Network down on Apply (toast) | সার্ভারের সাথে সংযোগ করা যাচ্ছে না। একটু পরে আবার চেষ্টা করুন। | Can't reach the server. Please try again later. |
+
+The "you already have an active application" banner on the class list (§4) comes with T-160, which adds `GET /me/holds`; until then a second Apply shows the `STUDENT_HAS_ACTIVE_HOLD` toast.
 
 Field-level messages for `VALIDATION_FAILED` are shown under each field (texts in §5). The full UI dictionary lives in `shared/i18n/bn.ts` and `en.ts`; this document lists the user-facing strings that need agreement.
 

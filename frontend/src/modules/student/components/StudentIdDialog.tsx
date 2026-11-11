@@ -5,7 +5,7 @@ import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { setStudentId, useStudentId } from '../hooks/useStudentId'
-import { useStudentIdDialog } from '../hooks/useStudentIdDialog'
+import { takeAfterSave, useStudentIdDialog } from '../hooks/useStudentIdDialog'
 import { isValidStudentId } from '../types'
 
 /** "Enter birth registration number" dialog (UI_DESIGN §3). Accepts Bangla or English digits, saves ASCII. */
@@ -34,7 +34,10 @@ function StudentIdForm({ initial, onDone }: { initial: string; onDone: () => voi
     event.preventDefault()
     if (valid) {
       setStudentId(normalized)
+      // Taken before closing (closing drops it); run after, when the new ID is already in use.
+      const next = takeAfterSave()
       onDone()
+      next?.()
     }
   }
 
